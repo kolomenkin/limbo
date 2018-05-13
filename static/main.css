@@ -1,0 +1,28 @@
+body {
+	background-color: #EEEEEE;
+}
+
+.dropzone {
+	background-color: #EEEEEE;
+}
+
+.table-bordered {
+	background-color: #F5F5F5;
+}
+
+.modal-content {
+	background-color: #EEEEEE;
+}
+
+.dropzone .dz-message {
+	background-color: #DDDDDD;
+	border: 2px solid Gray;
+	color: DimGray;
+	padding: 35px 32px;
+	font-size: 18px;
+	margin: 1em 0;
+}
+
+.btn-danger {
+	font-size: 14px;
+}
