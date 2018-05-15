@@ -8,16 +8,17 @@ All files are automatically deleted 24 hours after upload.
 
 ### Config file
 
-You can edit config.py to set custom options.
+You can edit [config.py](config.py) to set custom options. All of them may be overloaded using environment variables.
 
 ### Environment variables
 
-* LIMBO_WEB_SERVER : default value is 'wsgiref'
-* LIMBO_LISTEN_HOST : default value is 'localhost'
-* LIMBO_LISTEN_PORT : default value is '8080'
-* LIMBO_STORAGE_DIRECTORY : default value is './storage'
-* LIMBO_MAX_STORAGE_SECONDS : default value is '86400'
-* LIMBO_IS_DEBUG : default value is '0'
+* LIMBO_WEB_SERVER : Default value is 'wsgiref'. Python web server name. 'wsgiref' is available by default. Other values will need installing appropriate python component. Supported values: 'wsgiref', 'paste', 'cherrypy', ...
+* LIMBO_LISTEN_HOST : Default value is 'localhost'. IP address to listen. Usually 127.0.0.1 or localhost should be used for local testing, 0.0.0.0 for production.
+* LIMBO_LISTEN_PORT : Default value is '8080'. IP port to listen (HTTP). Usually port 80 is used on production.
+* LIMBO_STORAGE_DIRECTORY : Default value is './storage'. Directory to store uploaded files in. If not exists it will be created automatically with access rights 755. This may be absolute path of path relative to Limbo root directory.
+* LIMBO_STORAGE_WEB_URL_BASE : Default value is ''. Allows to specify alternative web url to read files stored in STORAGE_DIRECTORY through HTTP/HTTPS. It is expected this URL is served by standalone web server. Empty string disables this setting. Value requires ending '/' character.
+* LIMBO_MAX_STORAGE_SECONDS : Default value is '86400'. Time duration in seconds after which uploaded file will be automatically removed. 86400 seconds is equal to 24 hours. Automatic file purging happens approximately every 10 minutes.
+* LIMBO_IS_DEBUG : Default value is '0'. Enable debug mode in bottle web framework. It will disable web page template caching.
 
 ## How to run the service
 
