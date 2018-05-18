@@ -16,7 +16,7 @@ import sys
 import time
 import threading
 
-bottle.TEMPLATE_PATH = [os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'templates')]
+bottle.TEMPLATE_PATH = [os.path.join(os.path.dirname(__file__), 'static', 'templates')]
 STORAGE_DIRECTORY = os.path.abspath(config.STORAGE_DIRECTORY)
 STORAGE_URL_SUBDIR = '/files/'
 STOP_THREADS = False
