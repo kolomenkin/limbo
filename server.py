@@ -76,8 +76,8 @@ def root_page():
 				'sortBy': age,
 			})
 	return {
-			'title': 'Limbo: the file sharing lightweight service',
-			'h1': 'Limbo. The file sharing lightweight service',
+			'title': 'Duplo: the file sharing lightweight service',
+			'h1': 'Duplo. The file sharing lightweight service',
 			'files': sorted(files, key=lambda item: item['sortBy']),
 		}
 
