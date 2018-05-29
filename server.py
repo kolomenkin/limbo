@@ -28,8 +28,13 @@ def file_age_in_seconds(pathname):
     return time.time() - os.stat(pathname)[stat.ST_MTIME]
 
 def clean_filename(filename):
-    s = re.sub('[\\\\:\'\\[\\]/",<>&^$+*?;]', '_', filename)
-    s = re.sub('^(CON|PRN|AUX|NUL|COM\\d|LPT\\d)$', 'SPECIAL', s, flags=re.IGNORECASE)
+    # dots and space at end of file name are ignored
+    s = filename.rstrip('. ')
+    # replace forbidden symbols
+    s = re.sub('[\\\\:\'\\[\\]/",<>&^$+*?;|]', '_', s)
+    # Deny special file names
+    s = re.sub('^(CON|PRN|AUX|NUL|COM\\d|LPT\\d)($|\..*)', 'SPECIAL\\2', s, flags=re.IGNORECASE)
+    s = 'EMPTY' if s == '' else s
     return s
 
 def check_retention():
