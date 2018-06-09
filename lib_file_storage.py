@@ -23,7 +23,7 @@ def clean_filename(filename):
     s = re.sub('[\\\\:\'\\[\\]/",<>&^$+*?;|\x00-\x1F]', '_', s)
     # Deny special file names:
     # This is important not to make string longer here!
-    s = re.sub('^(CON|PRN|AUX|NUL|COM\\d|LPT\\d)($|\..*)', 'RES\\2',
+    s = re.sub('^(CON|PRN|AUX|NUL|COM\\d|LPT\\d)($|\..*)', 'DEV\\2',
                s, flags=re.IGNORECASE)
     s = 'EMPTY' if s == '' else s
     return s
@@ -59,7 +59,7 @@ class FileStorage:
                 files.append(
                     {
                         'fulldiskname': fullname,
-                        'uriname': file,
+                        'urlname': file,
                         'displayname': file,
                     })
         return files
@@ -91,7 +91,7 @@ class FileStorage:
         previous_check_time = 0
         while not self._stopping:
             now = time.time()
-            if now - previous_check_time > 10 * 60:
+            if now - previous_check_time > 10 * 60:  # every 10 minutes
                 log('FileStorage: Check for outdated files')
                 self._check_retention()
                 previous_check_time = now

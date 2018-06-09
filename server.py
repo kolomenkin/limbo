@@ -11,6 +11,7 @@ from lib_common import log, file_age_in_seconds
 import bottle
 import mimetypes
 import os
+from urllib.parse import quote
 
 bottle.TEMPLATE_PATH = [os.path.join(os.path.dirname(__file__),
                                      'static', 'templates')]
@@ -54,13 +55,14 @@ def root_page():
     items = storage.enumerate_files()
     for item in items:
         fullname = item['fulldiskname']
-        uriname = item['uriname']
+        urlname = item['urlname']
         displayname = item['displayname']
         age = file_age_in_seconds(fullname)
         files.append(
             {
                 'name': displayname,
-                'url': urlprefix + uriname,
+                'url': urlprefix + quote(urlname),
+                'urlname': urlname,
                 'size': format_size(os.path.getsize(fullname)),
                 'age': format_age(age),
                 'sortBy': age,
@@ -95,7 +97,7 @@ def cgi_upload():
 
     with storage.open_file_to_write(filename) as file:
         while True:
-            chunk = body.read(64*1024)
+            chunk = body.read(64 * 1024)
             if not chunk:
                 break
             file.write(chunk)
