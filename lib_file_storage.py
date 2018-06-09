@@ -13,12 +13,17 @@ import time
 
 
 def clean_filename(filename):
-    # dots and space at end of file name are ignored
-    s = filename.rstrip('. ')
-    # replace forbidden symbols
-    s = re.sub('[\\\\:\'\\[\\]/",<>&^$+*?;|]', '_', s)
-    # Deny special file names
-    s = re.sub('^(CON|PRN|AUX|NUL|COM\\d|LPT\\d)($|\..*)', 'SPECIAL\\2',
+    s = filename
+    # https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+    # limit max length:
+    s = s[:250]
+    # dots and space at end of file name are ignored:
+    s = s.rstrip('. ')
+    # replace forbidden symbols:
+    s = re.sub('[\\\\:\'\\[\\]/",<>&^$+*?;|\x00-\x1F]', '_', s)
+    # Deny special file names:
+    # This is important not to make string longer here!
+    s = re.sub('^(CON|PRN|AUX|NUL|COM\\d|LPT\\d)($|\..*)', 'RES\\2',
                s, flags=re.IGNORECASE)
     s = 'EMPTY' if s == '' else s
     return s

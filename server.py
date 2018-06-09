@@ -86,7 +86,7 @@ def cgi_addtext():
 @bottle.post('/cgi/upload/')
 def cgi_upload():
     upload = bottle.request.files.get('file')
-    filename = upload.filename
+    filename = upload.raw_filename
     body = upload.file
 
     with storage.open_file_to_write(filename) as file:
