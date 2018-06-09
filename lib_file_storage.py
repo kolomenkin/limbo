@@ -5,10 +5,13 @@
 
 from lib_common import log, file_age_in_seconds
 
-import io
-import os
+from io import open as io_open
+from os import listdir as os_listdir, \
+               makedirs as os_makedirs, \
+               path as os_path, \
+               remove as os_remove
 import re
-import threading
+from threading import Thread as threading_Thread
 import time
 
 
@@ -32,18 +35,18 @@ def clean_filename(filename):
 class FileStorage:
     def __init__(self, storage_directory, max_store_time_seconds):
         log('FileStorage: create')
-        self._storage_directory = os.path.abspath(storage_directory)
+        self._storage_directory = os_path.abspath(storage_directory)
         self._max_store_time_seconds = max_store_time_seconds
         self._retension_thread = None
         self._stopping = False
 
-        if not os.path.isdir(self._storage_directory):
-            os.makedirs(self._storage_directory, 755)
+        if not os_path.isdir(self._storage_directory):
+            os_makedirs(self._storage_directory, 755)
 
     def start(self):
         log('FileStorage: start')
         self._retension_thread = \
-            threading.Thread(target=self._retension_thread_procedure)
+            threading_Thread(target=self._retension_thread_procedure)
         self._retension_thread.start()
 
     def stop(self):
@@ -53,9 +56,9 @@ class FileStorage:
 
     def enumerate_files(self):
         files = []
-        for file in os.listdir(self._storage_directory):
-            fullname = os.path.join(self._storage_directory, file)
-            if os.path.isfile(fullname):
+        for file in os_listdir(self._storage_directory):
+            fullname = os_path.join(self._storage_directory, file)
+            if os_path.isfile(fullname):
                 files.append(
                     {
                         'fulldiskname': fullname,
@@ -65,19 +68,20 @@ class FileStorage:
         return files
 
     def open_file_to_write(self, filename):
-        fullname = os.path.join(self._storage_directory,
+        fullname = os_path.join(self._storage_directory,
                                 FileStorage._canonize_file(filename))
         log('FileStorage: Upload file: ' + fullname)
-        return io.open(fullname, 'xb')
+        return io_open(fullname, 'xb')
 
     def get_file_info_to_read(self, filename):
         return [self._storage_directory, FileStorage._canonize_file(filename)]
 
     def remove_file(self, filename):
-        fullname = os.path.join(self._storage_directory,
+        fullname = os_path.join(self._storage_directory,
                                 FileStorage._canonize_file(filename))
-        log('FileStorage: Remove file: "' + fullname + '"; size: ' + str(os.path.getsize(fullname)))
-        os.remove(fullname)
+        log('FileStorage: Remove file: "' + fullname +
+            '"; size: ' + str(os_path.getsize(fullname)))
+        os_remove(fullname)
 
     def _canonize_file(filename):
         canonizeed = clean_filename(filename)
@@ -98,10 +102,10 @@ class FileStorage:
             time.sleep(2)
 
     def _check_retention(self):
-        for file in os.listdir(self._storage_directory):
-            fullname = os.path.join(self._storage_directory, file)
-            if os.path.isfile(fullname):
+        for file in os_listdir(self._storage_directory):
+            fullname = os_path.join(self._storage_directory, file)
+            if os_path.isfile(fullname):
                 age = file_age_in_seconds(fullname)
                 if age > self._max_store_time_seconds:
                     log('FileStorage: Remove outdated file: ' + fullname)
-                    os.remove(fullname)
+                    os_remove(fullname)

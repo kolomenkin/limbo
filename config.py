@@ -2,12 +2,12 @@
 # Copyright 2018 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 
-import os
+from os import environ as os_environ
 
 
 def read_env(name, defaultValue):
-    if name in os.environ:
-        return os.environ[name]
+    if name in os_environ:
+        return os_environ[name]
     return defaultValue
 
 

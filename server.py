@@ -10,10 +10,12 @@ from lib_common import log, file_age_in_seconds
 
 import bottle
 import mimetypes
-import os
-from urllib.parse import quote
+from os import path as os_path
+from urllib.parse import quote as urllib_quote
+from json import dumps as json_dumps
 
-bottle.TEMPLATE_PATH = [os.path.join(os.path.dirname(__file__),
+
+bottle.TEMPLATE_PATH = [os_path.join(os_path.dirname(__file__),
                                      'static', 'templates')]
 
 STORAGE_URL_SUBDIR = '/files/'
@@ -61,9 +63,9 @@ def root_page():
         files.append(
             {
                 'name': displayname,
-                'url': urlprefix + quote(urlname),
+                'url': URLPREFIX + urllib_quote(urlname),
                 'urlname': urlname,
-                'size': format_size(os.path.getsize(fullname)),
+                'size': format_size(os_path.getsize(fullname)),
                 'age': format_age(age),
                 'sortBy': age,
             })
@@ -118,9 +120,9 @@ def cgi_remove():
 @bottle.route('/static/<filepath:path>')
 def server_static(filepath):
     log('Static file requested: ' + filepath)
-    root_folder = os.path.abspath(os.path.dirname(__file__))
+    root_folder = os_path.abspath(os_path.dirname(__file__))
     response = bottle.static_file(filepath,
-                                  root=os.path.join(root_folder, 'static'))
+                                  root=os_path.join(root_folder, 'static'))
     response.set_header('Cache-Control', 'public, max-age=604800')
     return response
 
