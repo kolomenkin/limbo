@@ -47,6 +47,7 @@ def format_age(a):
 @bottle.route('/')
 @bottle.view('root.html')
 def root_page():
+    log('Root page is requested')
     urlprefix = STORAGE_URL_SUBDIR if config.STORAGE_WEB_URL_BASE == '' \
                                    else config.STORAGE_WEB_URL_BASE
     files = []
@@ -73,21 +74,24 @@ def root_page():
 
 @bottle.post('/cgi/addtext/')
 def cgi_addtext():
-    log('Share text')
+    log('Share text begin')
     filename = bottle.request.forms.title + '.txt'
     body = bytearray(bottle.request.forms.body, encoding='utf-8')
 
     with storage.open_file_to_write(filename) as file:
         file.write(body)
 
+    log('Shared text size: ' + str(len(body)))
     return 'OK'
 
 
 @bottle.post('/cgi/upload/')
 def cgi_upload():
+    log('Upload file begin')
     upload = bottle.request.files.get('file')
     filename = upload.raw_filename
     body = upload.file
+    size = 0
 
     with storage.open_file_to_write(filename) as file:
         while True:
@@ -95,12 +99,15 @@ def cgi_upload():
             if not chunk:
                 break
             file.write(chunk)
+            size += len(chunk)
 
+    log('Uploaded file size: ' + str(size))
     return 'OK'
 
 
 @bottle.post('/cgi/remove/')
 def cgi_remove():
+    log('Remove file begin')
     filename = bottle.request.forms.fileName
     storage.remove_file(filename)
     return 'OK'
@@ -108,6 +115,7 @@ def cgi_remove():
 
 @bottle.route('/static/<filepath:path>')
 def server_static(filepath):
+    log('Static file requested: ' + filepath)
     root_folder = os.path.abspath(os.path.dirname(__file__))
     response = bottle.static_file(filepath,
                                   root=os.path.join(root_folder, 'static'))
@@ -122,6 +130,7 @@ def server_favicon():
 
 @bottle.route(STORAGE_URL_SUBDIR + '<filepath:path>')
 def server_storage(filepath):
+    log('File download: ' + filepath)
     filedir, filename = storage.get_file_info_to_read(filepath)
 
     # show preview for images and text files
