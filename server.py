@@ -6,19 +6,22 @@
 import config
 
 from lib_file_storage import FileStorage
-from lib_common import log, file_age_in_seconds
+from lib_common import log, get_file_modified_unixtime
 
 import bottle
+from json import dumps as json_dumps
 import mimetypes
 from os import path as os_path
+from time import time as time_time
 from urllib.parse import quote as urllib_quote
-from json import dumps as json_dumps
 
 
 bottle.TEMPLATE_PATH = [os_path.join(os_path.dirname(__file__),
                                      'static', 'templates')]
 
 STORAGE_URL_SUBDIR = '/files/'
+URLPREFIX = STORAGE_URL_SUBDIR if config.STORAGE_WEB_URL_BASE == '' \
+                               else config.STORAGE_WEB_URL_BASE
 
 storage = FileStorage(config.STORAGE_DIRECTORY, config.MAX_STORAGE_SECONDS)
 
@@ -51,29 +54,53 @@ def format_age(a):
 @bottle.view('root.html')
 def root_page():
     log('Root page is requested')
-    urlprefix = STORAGE_URL_SUBDIR if config.STORAGE_WEB_URL_BASE == '' \
-                                   else config.STORAGE_WEB_URL_BASE
     files = []
     items = storage.enumerate_files()
+    now = time_time()
     for item in items:
         fullname = item['fulldiskname']
         urlname = item['urlname']
         displayname = item['displayname']
-        age = file_age_in_seconds(fullname)
+        modified_unixtime = get_file_modified_unixtime(fullname)
         files.append(
             {
                 'name': displayname,
                 'url': URLPREFIX + urllib_quote(urlname),
                 'urlname': urlname,
                 'size': format_size(os_path.getsize(fullname)),
-                'age': format_age(age),
-                'sortBy': age,
+                'age': format_age(now - modified_unixtime),
+                'sortBy': now - modified_unixtime,
             })
+    files = sorted(files, key=lambda item: item['sortBy'])
     return {
             'title': 'Limbo: the file sharing lightweight service',
             'h1': 'Limbo. The file sharing lightweight service',
-            'files': sorted(files, key=lambda item: item['sortBy']),
+            'files': files,
         }
+
+
+# JSON API for tests and automation
+@bottle.get('/cgi/enumerate/')
+def cgi_enumerate():
+    log('Enumerate files')
+    bottle.response.content_type = 'application/json'
+    files = []
+    items = storage.enumerate_files()
+    for item in items:
+        fullname = item['fulldiskname']
+        urlname = item['urlname']
+        displayname = item['displayname']
+        modified_unixtime = get_file_modified_unixtime(fullname)
+        files.append(
+            {
+                'name': displayname,
+                'url': URLPREFIX + urllib_quote(urlname),
+                'urlname': urlname,
+                'size': os_path.getsize(fullname),
+                'modified': modified_unixtime,
+            })
+    files = sorted(files, key=lambda item: item['modified'])
+    return json_dumps(files, indent=4)
 
 
 @bottle.post('/cgi/addtext/')

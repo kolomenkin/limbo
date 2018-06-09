@@ -3,14 +3,14 @@
 # Copyright 2018 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 
-import os
-import stat
-import time
+from os import stat as os_stat
+from stat import ST_MTIME as stat_ST_MTIME
+from time import strftime as time_strftime
 
 
 def log(*args):
-    print('DBG>', time.strftime('%Y-%m-%d %H:%M:%S:'), *args)
+    print('DBG>', time_strftime('%Y-%m-%d %H:%M:%S:'), *args)
 
 
-def file_age_in_seconds(pathname):
-    return time.time() - os.stat(pathname)[stat.ST_MTIME]
+def get_file_modified_unixtime(pathname):
+    return os_stat(pathname)[stat_ST_MTIME]

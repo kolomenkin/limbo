@@ -3,7 +3,7 @@
 # Copyright 2018 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 
-from lib_common import log, file_age_in_seconds
+from lib_common import log, get_file_modified_unixtime
 
 from io import open as io_open
 from os import listdir as os_listdir, \
@@ -12,7 +12,7 @@ from os import listdir as os_listdir, \
                remove as os_remove
 import re
 from threading import Thread as threading_Thread
-import time
+from time import time as time_time, sleep as time_sleep
 
 
 def clean_filename(filename):
@@ -94,18 +94,19 @@ class FileStorage:
         log('FileStorage: Retension thread started')
         previous_check_time = 0
         while not self._stopping:
-            now = time.time()
+            now = time_time()
             if now - previous_check_time > 10 * 60:  # every 10 minutes
                 log('FileStorage: Check for outdated files')
                 self._check_retention()
                 previous_check_time = now
-            time.sleep(2)
+            time_sleep(2)
 
     def _check_retention(self):
+        now = time_time()
         for file in os_listdir(self._storage_directory):
             fullname = os_path.join(self._storage_directory, file)
             if os_path.isfile(fullname):
-                age = file_age_in_seconds(fullname)
-                if age > self._max_store_time_seconds:
+                modified_unixtime = get_file_modified_unixtime(fullname)
+                if now - modified_unixtime > self._max_store_time_seconds:
                     log('FileStorage: Remove outdated file: ' + fullname)
                     os_remove(fullname)
