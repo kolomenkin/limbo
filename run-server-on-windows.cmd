@@ -12,7 +12,7 @@ if not "%DEV_FULLPATH%" == "" (
 )
 
 REM set LIMBO_IS_DEBUG=1
-set LIMBO_WEB_SERVER=paste
+set LIMBO_WEB_SERVER=cherrypy
 set LIMBO_LISTEN_HOST=127.0.0.1
 set LIMBO_LISTEN_PORT=8080
 
@@ -20,7 +20,7 @@ python --version
 
 REM install dependencies
 python -m pip install -r requirements.txt
-python -m pip install paste
+python -m pip install cherrypy
 
 python server.py
 

@@ -3,11 +3,11 @@ FROM python:3-alpine
 COPY . /opt/limbo/
 
 RUN pip install -r /opt/limbo/requirements.txt \
-    && pip install paste \
+    && pip install cherrypy \
     && mkdir -p -m 777 /tmp/storage
 
 ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage \
-    LIMBO_WEB_SERVER=paste \
+    LIMBO_WEB_SERVER=cherrypy \
     LIMBO_LISTEN_HOST=0.0.0.0 \
     LIMBO_LISTEN_PORT=80
 
