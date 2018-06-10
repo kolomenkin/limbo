@@ -1,0 +1,12 @@
+bottle=0.12.13
+
+flake8=3.5.0
+pytest=3.6.1
+numpy==1.11.3
+
+CherryPy=8.9.1
+tornado=5.0.2
+Paste=2.0.3
+
+# slugify
+# streaming_form_data

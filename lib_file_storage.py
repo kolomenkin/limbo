@@ -97,6 +97,13 @@ class FileStorage:
             '"; size: ' + str(os_path.getsize(fullname)))
         os_remove(fullname)
 
+    def remove_all_files(self):
+        for disk_filename in os_listdir(self._storage_directory):
+            fullname = os_path.join(self._storage_directory, disk_filename)
+            log('FileStorage: Remove file: "' + disk_filename +
+                '"; size: ' + str(os_path.getsize(fullname)))
+            os_remove(fullname)
+
     def _fname_original_to_disk(original_filename):
         return FileStorage._canonize_file(original_filename)
 

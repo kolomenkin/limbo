@@ -3,7 +3,7 @@ FROM python:3-alpine
 COPY . /opt/limbo/
 
 RUN pip install -r /opt/limbo/requirements.txt \
-    && pip install cherrypy \
+    && pip install cherrypy==8.9.1 \
     && mkdir -p -m 777 /tmp/storage
 
 ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage \

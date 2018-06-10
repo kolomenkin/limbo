@@ -88,7 +88,7 @@ def root_page():
         }
 
 
-# JSON API for tests and automation
+# JSON API for auto tests and automation
 @bottle.get('/cgi/enumerate/')
 def cgi_enumerate():
     log('Enumerate files')
@@ -151,6 +151,14 @@ def cgi_remove():
     log('Remove file begin')
     urlpath = bottle.request.forms.fileName
     storage.remove_file(urlpath)
+    return 'OK'
+
+
+# API endpoint for auto tests
+@bottle.post('/cgi/remove-all/')
+def cgi_remove_all():
+    log('Remove all files in storage')
+    storage.remove_all_files()
     return 'OK'
 
 
