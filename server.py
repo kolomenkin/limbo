@@ -179,7 +179,11 @@ def server_storage(url_filename):
     # force text files to be shown as text/plain
     # (and not text/html for example)
 
-    mimetype, encoding = mimetypes.guess_type(display_filename)
+    # Empty extenstion is treated as .txt extension
+    mime_filename = display_filename \
+        if '.' in display_filename else display_filename + '.txt'
+
+    mimetype, encoding = mimetypes.guess_type(mime_filename)
     mimetype = str(mimetype)
     if mimetype.startswith('text/'):
         mimetype = 'text/plain'
@@ -190,6 +194,8 @@ def server_storage(url_filename):
     if showpreview:
         response = bottle.static_file(disk_filename,
                                       root=filedir, mimetype=mimetype)
+        content_disposition = 'inline; filename="%s"' % display_filename
+        response.set_header('Content-Disposition', content_disposition)
     else:
         response = bottle.static_file(disk_filename,
                                       root=filedir, download=display_filename)
@@ -203,7 +209,7 @@ def server_storage(url_filename):
 if __name__ == '__main__':
     log('Loading...')
 
-    # treat more file extensions as test files
+    # treat more file extensions as text files
     # (so preview in browser will be available)
     for ext in [
             'cfg',
