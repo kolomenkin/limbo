@@ -6,3 +6,6 @@ help:
 test:
 	PYTHONPATH=. py.test
 	flake8
+
+test_server:
+	PYTHONPATH=. python ./tests/test_server.py

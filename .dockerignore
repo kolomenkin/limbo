@@ -1,5 +1,10 @@
+/.cache/
 /__pycache__/
+/.pytest_cache/
 /storage/
+/tests/
+/venv/
+/.venv/
 /CREDITS
 /Dockerfile
 /LICENSE

@@ -130,6 +130,8 @@ def cgi_addtext():
 def cgi_upload():
     log('Upload file begin')
     upload = bottle.request.files.get('file')
+    if upload is None:
+        raise ValueError('ERROR! "file" multipart field was not found')
     original_filename = upload.raw_filename
     body = upload.file
     size = 0

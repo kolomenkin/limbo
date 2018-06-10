@@ -1,0 +1,14 @@
+bottle==0.12.13
+
+# testing helpers
+flake8==3.5.0
+numpy==1.11.3
+pytest==3.6.1
+requests==2.18.4
+
+# web servers
+cherrypy==8.9.1
+paste==2.0.3
+tornado==5.0.2
+twisted==18.4.0
+waitress==1.1.0
