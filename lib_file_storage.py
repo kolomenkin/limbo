@@ -15,6 +15,15 @@ from threading import Thread as threading_Thread
 from time import time as time_time, sleep as time_sleep
 
 
+# ==========================================
+# There are 4 types of file names:
+# 1) Original file name provided by user
+# 2) URL file name for use in URLs
+# 3) Disk file name (on server)
+# 4) Display name. Used on web page and to save file on end user's computer
+# ==========================================
+
+
 def clean_filename(filename):
     s = filename
     # https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
@@ -56,32 +65,49 @@ class FileStorage:
 
     def enumerate_files(self):
         files = []
-        for file in os_listdir(self._storage_directory):
-            fullname = os_path.join(self._storage_directory, file)
+        for disk_filename in os_listdir(self._storage_directory):
+            fullname = os_path.join(self._storage_directory, disk_filename)
             if os_path.isfile(fullname):
+                url_filename = FileStorage._fname_disk_to_url(disk_filename)
+                display_filename = \
+                    FileStorage._fname_disk_to_display(disk_filename)
                 files.append(
                     {
-                        'fulldiskname': fullname,
-                        'urlname': file,
-                        'displayname': file,
+                        'full_disk_filename': fullname,
+                        'url_filename': url_filename,
+                        'display_filename': display_filename,
                     })
         return files
 
-    def open_file_to_write(self, filename):
-        fullname = os_path.join(self._storage_directory,
-                                FileStorage._canonize_file(filename))
-        log('FileStorage: Upload file: ' + fullname)
+    def open_file_to_write(self, original_filename):
+        disk_filename = FileStorage._fname_original_to_disk(original_filename)
+        fullname = os_path.join(self._storage_directory, disk_filename)
+        log('FileStorage: Upload file: ' + disk_filename)
         return io_open(fullname, 'xb')
 
-    def get_file_info_to_read(self, filename):
-        return [self._storage_directory, FileStorage._canonize_file(filename)]
+    def get_file_info_to_read(self, url_filename):
+        disk_filename = FileStorage._fname_url_to_disk(url_filename)
+        display_filename = FileStorage._fname_disk_to_display(disk_filename)
+        return [self._storage_directory, disk_filename, display_filename]
 
-    def remove_file(self, filename):
-        fullname = os_path.join(self._storage_directory,
-                                FileStorage._canonize_file(filename))
-        log('FileStorage: Remove file: "' + fullname +
+    def remove_file(self, url_filename):
+        disk_filename = FileStorage._fname_url_to_disk(url_filename)
+        fullname = os_path.join(self._storage_directory, disk_filename)
+        log('FileStorage: Remove file: "' + disk_filename +
             '"; size: ' + str(os_path.getsize(fullname)))
         os_remove(fullname)
+
+    def _fname_original_to_disk(original_filename):
+        return FileStorage._canonize_file(original_filename)
+
+    def _fname_url_to_disk(url_filename):
+        return FileStorage._canonize_file(url_filename)
+
+    def _fname_disk_to_url(disk_filename):
+        return disk_filename
+
+    def _fname_disk_to_display(disk_filename):
+        return disk_filename
 
     def _canonize_file(filename):
         canonizeed = clean_filename(filename)

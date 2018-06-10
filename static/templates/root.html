@@ -64,11 +64,11 @@
 									% for file in files:
 									<tr id="row_{{index}}">
 										<td class="text-center">{{index + 1}}</td>
-										<td id="name"><a href="{{file['url']}}">{{file['name']}}</a></td>
+										<td id="name"><a href="{{file['url']}}">{{file['display_filename']}}</a></td>
 										<td class="text-right" style="font-family: monospace;">{{file['size']}}</td>
 										<td style="font-family: monospace;">{{file['age']}}</td>
 										<td class="text-center">
-											<button type="button" class="btn btn-danger btn-xs" onclick="removeFileRequest( {{index}} , '{{file['urlname']}}')">&times;</button>
+											<button type="button" class="btn btn-danger btn-xs" onclick="removeFileRequest( {{index}} , '{{file['url_filename']}}')">&times;</button>
 										</td>
 									</tr>
 									% index = index + 1

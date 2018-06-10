@@ -16,6 +16,15 @@ from time import time as time_time
 from urllib.parse import quote as urllib_quote
 
 
+# ==========================================
+# There are 4 types of file names:
+# 1) Original file name provided by user
+# 2) URL file name for use in URLs
+# 3) Disk file name (on server)
+# 4) Display name. Used on web page and to save file on end user's computer
+# ==========================================
+
+
 bottle.TEMPLATE_PATH = [os_path.join(os_path.dirname(__file__),
                                      'static', 'templates')]
 
@@ -58,16 +67,16 @@ def root_page():
     items = storage.enumerate_files()
     now = time_time()
     for item in items:
-        fullname = item['fulldiskname']
-        urlname = item['urlname']
-        displayname = item['displayname']
-        modified_unixtime = get_file_modified_unixtime(fullname)
+        full_disk_filename = item['full_disk_filename']
+        url_filename = item['url_filename']
+        display_filename = item['display_filename']
+        modified_unixtime = get_file_modified_unixtime(full_disk_filename)
         files.append(
             {
-                'name': displayname,
-                'url': URLPREFIX + urllib_quote(urlname),
-                'urlname': urlname,
-                'size': format_size(os_path.getsize(fullname)),
+                'display_filename': display_filename,
+                'url': URLPREFIX + urllib_quote(url_filename),
+                'url_filename': url_filename,
+                'size': format_size(os_path.getsize(full_disk_filename)),
                 'age': format_age(now - modified_unixtime),
                 'sortBy': now - modified_unixtime,
             })
@@ -87,16 +96,16 @@ def cgi_enumerate():
     files = []
     items = storage.enumerate_files()
     for item in items:
-        fullname = item['fulldiskname']
-        urlname = item['urlname']
-        displayname = item['displayname']
-        modified_unixtime = get_file_modified_unixtime(fullname)
+        full_disk_filename = item['full_disk_filename']
+        url_filename = item['url_filename']
+        display_filename = item['display_filename']
+        modified_unixtime = get_file_modified_unixtime(full_disk_filename)
         files.append(
             {
-                'name': displayname,
-                'url': URLPREFIX + urllib_quote(urlname),
-                'urlname': urlname,
-                'size': os_path.getsize(fullname),
+                'display_filename': display_filename,
+                'url': URLPREFIX + urllib_quote(url_filename),
+                'url_filename': url_filename,
+                'size': os_path.getsize(full_disk_filename),
                 'modified': modified_unixtime,
             })
     files = sorted(files, key=lambda item: item['modified'])
@@ -105,11 +114,12 @@ def cgi_enumerate():
 
 @bottle.post('/cgi/addtext/')
 def cgi_addtext():
-    log('Share text begin')
-    filename = bottle.request.forms.title + '.txt'
+    text_title = bottle.request.forms.title
+    log('Share text begin: ' + text_title)
+    original_filename = text_title + '.txt'
     body = bytearray(bottle.request.forms.body, encoding='utf-8')
 
-    with storage.open_file_to_write(filename) as file:
+    with storage.open_file_to_write(original_filename) as file:
         file.write(body)
 
     log('Shared text size: ' + str(len(body)))
@@ -120,11 +130,11 @@ def cgi_addtext():
 def cgi_upload():
     log('Upload file begin')
     upload = bottle.request.files.get('file')
-    filename = upload.raw_filename
+    original_filename = upload.raw_filename
     body = upload.file
     size = 0
 
-    with storage.open_file_to_write(filename) as file:
+    with storage.open_file_to_write(original_filename) as file:
         while True:
             chunk = body.read(64 * 1024)
             if not chunk:
@@ -139,16 +149,16 @@ def cgi_upload():
 @bottle.post('/cgi/remove/')
 def cgi_remove():
     log('Remove file begin')
-    filename = bottle.request.forms.fileName
-    storage.remove_file(filename)
+    urlpath = bottle.request.forms.fileName
+    storage.remove_file(urlpath)
     return 'OK'
 
 
-@bottle.route('/static/<filepath:path>')
-def server_static(filepath):
-    log('Static file requested: ' + filepath)
+@bottle.route('/static/<urlpath:path>')
+def server_static(urlpath):
+    log('Static file requested: ' + urlpath)
     root_folder = os_path.abspath(os_path.dirname(__file__))
-    response = bottle.static_file(filepath,
+    response = bottle.static_file(urlpath,
                                   root=os_path.join(root_folder, 'static'))
     response.set_header('Cache-Control', 'public, max-age=604800')
     return response
@@ -159,16 +169,17 @@ def server_favicon():
     return server_static('favicon.png')
 
 
-@bottle.route(STORAGE_URL_SUBDIR + '<filepath:path>')
-def server_storage(filepath):
-    log('File download: ' + filepath)
-    filedir, filename = storage.get_file_info_to_read(filepath)
+@bottle.route(STORAGE_URL_SUBDIR + '<url_filename>')
+def server_storage(url_filename):
+    log('File download: ' + url_filename)
+    filedir, disk_filename, display_filename = \
+        storage.get_file_info_to_read(url_filename)
 
     # show preview for images and text files
     # force text files to be shown as text/plain
     # (and not text/html for example)
 
-    mimetype, encoding = mimetypes.guess_type(filename)
+    mimetype, encoding = mimetypes.guess_type(display_filename)
     mimetype = str(mimetype)
     if mimetype.startswith('text/'):
         mimetype = 'text/plain'
@@ -177,11 +188,11 @@ def server_storage(filepath):
     showpreview = mimetype != ''
 
     if showpreview:
-        response = bottle.static_file(filename,
+        response = bottle.static_file(disk_filename,
                                       root=filedir, mimetype=mimetype)
     else:
-        response = bottle.static_file(filename,
-                                      root=filedir, download=filepath)
+        response = bottle.static_file(disk_filename,
+                                      root=filedir, download=display_filename)
 
     response.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
     response.set_header('Pragma', 'no-cache')
