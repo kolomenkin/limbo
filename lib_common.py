@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # Limbo file sharing (https://github.com/kolomenkin/limbo)
 # Copyright 2018 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)

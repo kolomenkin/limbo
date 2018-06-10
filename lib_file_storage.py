@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # Limbo file sharing (https://github.com/kolomenkin/limbo)
 # Copyright 2018 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
@@ -43,7 +42,8 @@ def clean_filename(filename):
 
 class FileStorage:
     def __init__(self, storage_directory, max_store_time_seconds):
-        log('FileStorage: create')
+        log('FileStorage: create(' + storage_directory + ', max ' +
+            str(max_store_time_seconds) + ' sec)')
         self._storage_directory = os_path.abspath(storage_directory)
         self._max_store_time_seconds = max_store_time_seconds
         self._retension_thread = None

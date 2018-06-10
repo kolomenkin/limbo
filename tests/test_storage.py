@@ -1,13 +1,13 @@
 from base64 import b64decode
 from numpy import random
 from os import path as os_path
-import tempfile
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 # add parent dir to search for imported modules
 # import os, sys
-# myPath = os.path.dirname(os.path.abspath(__file__))
-# sys.path.insert(0, myPath + '/../')
+# script_dir = os.path.dirname(os.path.abspath(__file__))
+# sys.path.insert(0, script_dir + '/../')
 from lib_file_storage import FileStorage
 
 
@@ -17,8 +17,8 @@ def get_random_bytes(size, seed):
 
 
 def GetFileStorage():
-    tmpdirname = tempfile.TemporaryDirectory()
-    print('created temporary directory', tmpdirname)
+    tmpdirname = TemporaryDirectory()
+    print('created temporary directory: ' + tmpdirname.name)
     storage = FileStorage(tmpdirname.name, 24 * 3600)
     return [tmpdirname, storage]
 

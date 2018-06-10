@@ -3,6 +3,6 @@ help:
 	$(info test              - run tests and check code formatting)
 	@:
 
-test: $(install_local_output)
+test:
 	PYTHONPATH=. py.test
 	flake8
