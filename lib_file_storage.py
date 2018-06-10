@@ -11,8 +11,8 @@ from os import listdir as os_listdir, \
                path as os_path, \
                remove as os_remove
 import re
-from threading import Thread as threading_Thread
-from time import time as time_time, sleep as time_sleep
+import threading
+from time import time as time_time
 
 
 # ==========================================
@@ -47,6 +47,8 @@ class FileStorage:
         self._storage_directory = os_path.abspath(storage_directory)
         self._max_store_time_seconds = max_store_time_seconds
         self._retension_thread = None
+        self._protect_stop = threading.Lock()
+        self._condition_stop = threading.Condition(self._protect_stop)
         self._stopping = False
 
         if not os_path.isdir(self._storage_directory):
@@ -55,12 +57,14 @@ class FileStorage:
     def start(self):
         log('FileStorage: start')
         self._retension_thread = \
-            threading_Thread(target=self._retension_thread_procedure)
+            threading.Thread(target=self._retension_thread_procedure)
         self._retension_thread.start()
 
     def stop(self):
         log('FileStorage: stop')
-        self._stopping = True
+        with self._condition_stop:
+            self._stopping = True
+            self._condition_stop.notify()
         self._retension_thread.join()
 
     def enumerate_files(self):
@@ -126,13 +130,19 @@ class FileStorage:
     def _retension_thread_procedure(self):
         log('FileStorage: Retension thread started')
         previous_check_time = 0
-        while not self._stopping:
+        while True:
             now = time_time()
             if now - previous_check_time > 10 * 60:  # every 10 minutes
                 log('FileStorage: Check for outdated files')
                 self._check_retention()
-                previous_check_time = now
-            time_sleep(2)
+                previous_check_time = time_time()
+
+            # Wait for 60 seconds with possibility to stop on stop() request:
+            with self._condition_stop:
+                if not self._stopping:
+                    self._condition_stop.wait(60)
+                if self._stopping:
+                    break
 
     def _check_retention(self):
         now = time_time()
