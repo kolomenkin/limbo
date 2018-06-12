@@ -198,15 +198,19 @@ def server_storage(url_filename):
     elif not mimetype.startswith('image/'):
         mimetype = ''
     showpreview = mimetype != ''
+    quoted_display_filename = urllib_quote(display_filename)
 
     if showpreview:
         response = bottle.static_file(disk_filename,
-                                      root=filedir, mimetype=mimetype)
-        content_disposition = 'inline; filename="%s"' % display_filename
+                                      root=filedir,
+                                      mimetype=mimetype)
+        content_disposition = 'inline; filename="%s"' % \
+            quoted_display_filename
         response.set_header('Content-Disposition', content_disposition)
     else:
         response = bottle.static_file(disk_filename,
-                                      root=filedir, download=display_filename)
+                                      root=filedir,
+                                      download=quoted_display_filename)
 
     response.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
     response.set_header('Pragma', 'no-cache')
