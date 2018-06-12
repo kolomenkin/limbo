@@ -97,7 +97,7 @@ class SpeedTest:
             try:
                 self.GetStoredFiles()
 
-                data = get_random_bytes(400123123, 42)
+                data = get_random_bytes(800123123, 42)
 
                 log('===============================================')
                 time1 = datetime.now()

@@ -2,7 +2,11 @@ FROM python:3-alpine
 
 COPY . /opt/limbo/
 
-RUN pip install -r /opt/limbo/requirements.txt \
+RUN apk add --no-cache \
+        gcc \
+        musl-dev \
+    && pip install -r /opt/limbo/requirements.txt \
+    && apk del gcc musl-dev \
     && pip install cherrypy==8.9.1 \
     && mkdir -p -m 777 /tmp/storage
 

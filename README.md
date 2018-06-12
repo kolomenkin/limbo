@@ -61,12 +61,12 @@ run-server-on-windows.cmd
 Here is a number of bottle-compliant WSGI web servers tested with Limbo.
 Particular web server versions can be checked in [requirements.dev.txt]
 
-- wsgiref - works, logging to console
+- wsgiref - logging to console, does not support async post body reading
 - cherrypy - works, no logging to console
-- tornado - works, no logging to console
-- twisted - works, no logging to console
-- waitress - works, no logging to console
-- paste - works, logging to console, but no support for utf-8 in URLs
+- tornado - no logging to console, does not support big file upload (100+ MB)
+- twisted - slow works, no logging to console, very slow (ignores async nature of streaming_form_data)
+- waitress - slow works, no logging to console, very slow (ignores async nature of streaming_form_data)
+- paste - partly works, logging to console, but no support for utf-8 in URLs
 - flup - starts and do not handle any requests (Windows). All HTTP requests are hanging
 - gevent - can't resolve dependencies in Windows in runtime
 - gunicorn - can't resolve dependencies in Windows in runtime

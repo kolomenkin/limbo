@@ -28,3 +28,5 @@ STORAGE_WEB_URL_BASE = read_env('LIMBO_STORAGE_WEB_URL_BASE', '')
 MAX_STORAGE_SECONDS = int(read_env('LIMBO_MAX_STORAGE_SECONDS', str(24*3600)))
 
 IS_DEBUG = bool(int(read_env('LIMBO_IS_DEBUG', '0')))
+
+DISABLE_STORAGE = bool(int(read_env('LIMBO_DISABLE_STORAGE', '0')))

@@ -4,8 +4,9 @@ CHANGELOG
 future release
 ------
 
+- process request body by chunks. Don't need to save big uploaded files to disk twice any more.
+- only one web server is found to work fine now: cherrypy
 - added speed test script for web server speed compare
-
 
 v1.3 [2018-06-12]
 ------

@@ -12,6 +12,8 @@ import bottle
 from json import dumps as json_dumps
 import mimetypes
 from os import path as os_path
+from streaming_form_data import StreamingFormDataParser
+from streaming_form_data.targets import BaseTarget, NullTarget
 from time import time as time_time
 from urllib.parse import quote as urllib_quote
 
@@ -126,25 +128,59 @@ def cgi_addtext():
     return 'OK'
 
 
+class StorageFileTarget(BaseTarget):
+    def __init__(self):
+        super().__init__()
+        self._fd = None
+
+    def start(self):
+        self._fd = storage.open_file_to_write(self.multipart_filename)
+
+    def data_received(self, chunk):
+        self._fd.write(chunk)
+
+    def finish(self):
+        self._fd.close()
+
+
 @bottle.post('/cgi/upload/')
 def cgi_upload():
     log('Upload file begin')
-    upload = bottle.request.files.get('file')
-    if upload is None:
-        raise ValueError('ERROR! "file" multipart field was not found')
-    original_filename = upload.raw_filename
-    body = upload.file
-    size = 0
 
-    with storage.open_file_to_write(original_filename) as file:
+    use_async_implementation = True
+
+    if use_async_implementation:
+        size = 0
+        file = NullTarget() if config.DISABLE_STORAGE else StorageFileTarget()
+        parser = StreamingFormDataParser(headers=bottle.request.headers)
+        parser.register('file', file)
+
         while True:
-            chunk = body.read(64 * 1024)
+            chunk = bottle.request.environ['wsgi.input'].read(64 * 1024)
             if not chunk:
                 break
-            file.write(chunk)
+            parser.data_received(chunk)
             size += len(chunk)
 
-    log('Uploaded file size: ' + str(size))
+        log('Uploaded request size: ' + str(size))
+    else:
+        size = 0
+        upload = bottle.request.files.get('file')
+        if upload is None:
+            raise ValueError('ERROR! "file" multipart field was not found')
+        original_filename = upload.raw_filename
+        body = upload.file
+
+        with storage.open_file_to_write(original_filename) as file:
+            while True:
+                chunk = body.read(64 * 1024)
+                if not chunk:
+                    break
+                if not config.DISABLE_STORAGE:
+                    file.write(chunk)
+                size += len(chunk)
+
+        log('Uploaded file size: ' + str(size))
     return 'OK'
 
 

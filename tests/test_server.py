@@ -280,7 +280,7 @@ class ServerTestCase(TestCase):
 
     def test_waitress(self): self.DoAllTests('waitress')
 
-    def test_wsgiref(self): self.DoAllTests('wsgiref')
+    # def test_wsgiref(self): self.DoAllTests('wsgiref')
 
 
 if __name__ == '__main__':
