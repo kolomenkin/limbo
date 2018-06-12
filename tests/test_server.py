@@ -5,6 +5,7 @@ from numpy import random
 from os import path as os_path, environ as os_environ
 from requests import get as requests_get, post as requests_post
 from subprocess import Popen as subprocess_Popen
+from sys import argv as sys_argv
 from tempfile import TemporaryDirectory
 from time import strftime as time_strftime
 from unittest import TestCase
@@ -37,6 +38,36 @@ def get_random_text(size, seed):
     return ''.join(random.choice(items, size))
 
 
+# http://code.activestate.com/recipes/576655-wait-for-network-service-to-appear/
+def wait_net_service(server, port, timeout=None):
+    import socket
+    from time import sleep, time as now
+
+    s = socket.socket()
+    if timeout:
+        end = now() + timeout
+
+    while True:
+        try:
+            if timeout:
+                next_timeout = end - now()
+                if next_timeout < 0:
+                    return False
+
+            s.connect((server, port))
+
+        except socket.timeout:
+            sleep(0.1)
+            pass
+        except socket.error:
+            sleep(0.1)
+            pass
+
+        else:
+            s.close()
+            return True
+
+
 class ServerTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -46,7 +77,7 @@ class ServerTestCase(TestCase):
         self._server_name = None
         self._base_url = None
 
-    def RunServer(server_name, port):
+    def RunServer(self, server_name, port):
         script_dir = os_path.dirname(os_path.abspath(__file__))
         root_dir = os_path.join(script_dir, '..')
         server_py = os_path.join(root_dir, 'server.py')
@@ -61,6 +92,7 @@ class ServerTestCase(TestCase):
         subenv['LIMBO_STORAGE_DIRECTORY'] = tmpdirname.name
 
         pid = subprocess_Popen(['python', server_py], cwd=root_dir, env=subenv)
+        wait_net_service(LISTEN_HOST, port, 10)
         return [tmpdirname, pid]
 
     def CheckHttpError(self, r):
@@ -196,7 +228,7 @@ class ServerTestCase(TestCase):
         self._server_name = server_name
         self._base_url = 'http://' + LISTEN_HOST + ':' + str(port)
         log('DoTest("' + self._server_name + '") start')
-        tmpdirname, pid = ServerTestCase.RunServer(self._server_name, port)
+        tmpdirname, pid = self.RunServer(self._server_name, port)
 
         with tmpdirname:
             try:
@@ -252,6 +284,7 @@ class ServerTestCase(TestCase):
 
 
 if __name__ == '__main__':
-    log('Begin testing...')
+    server_name = sys_argv[1] if len(sys_argv) > 1 else 'cherrypy'
+    log('Begin testing ' + server_name + '...')
     test = ServerTestCase()
-    test.DoAllTests('cherrypy')
+    test.DoAllTests(server_name)

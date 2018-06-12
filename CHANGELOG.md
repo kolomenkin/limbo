@@ -4,6 +4,8 @@ CHANGELOG
 future release
 ------
 
+- added speed test script for web server speed compare
+
 
 v1.3 [2018-06-12]
 ------

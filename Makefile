@@ -8,4 +8,7 @@ test:
 	flake8
 
 test_server:
-	PYTHONPATH=. python ./tests/test_server.py
+	PYTHONPATH=. python ./tests/test_server.py ${SERVER}
+
+speedtest:
+	PYTHONPATH=. python ./utils/speedtest.py ${SERVER}
