@@ -55,3 +55,18 @@ You can also run the service in Windows by the following command:
 ```
 run-server-on-windows.cmd
 ```
+
+### Choosing underlaying web server
+
+Here is a number of bottle-compliant WSGI web servers tested with Limbo.
+Particular web server versions can be checked in [requirements.dev.txt]
+
+- wsgiref - works, logging to console
+- cherrypy - works, no logging to console
+- tornado - works, no logging to console
+- twisted - works, no logging to console
+- waitress - works, no logging to console
+- paste - works, logging to console, but no support for utf-8 in URLs
+- flup - starts and do not handle any requests (Windows). All HTTP requests are hanging
+- gevent - can't resolve dependencies in Windows in runtime
+- gunicorn - can't resolve dependencies in Windows in runtime
