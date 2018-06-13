@@ -3,6 +3,7 @@ body {
 }
 
 .dropzone {
+    border-radius: 6px;
 	background-color: #EEEEEE;
 }
 
@@ -15,6 +16,7 @@ body {
 }
 
 .dropzone .dz-message {
+    border-radius: 6px;
 	background-color: #DDDDDD;
 	border: 2px solid Gray;
 	color: DimGray;
@@ -24,5 +26,6 @@ body {
 }
 
 .btn-danger {
+    border-radius: 4px;
 	font-size: 14px;
 }
