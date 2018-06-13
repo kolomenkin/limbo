@@ -1,13 +1,21 @@
 FROM python:3-alpine
 
-COPY . /opt/limbo/
+COPY *.py \
+    requirements.txt \
+    /opt/limbo/
 
-RUN apk add --no-cache \
+COPY static /opt/limbo/static/
+
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache \
         gcc \
         musl-dev \
     && pip install -r /opt/limbo/requirements.txt \
-    && apk del gcc musl-dev \
     && pip install cherrypy==8.9.1 \
+    && apk del \
+        gcc \
+        musl-dev \
     && mkdir -p -m 777 /tmp/storage
 
 ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage \

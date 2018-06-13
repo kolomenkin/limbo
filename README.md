@@ -49,6 +49,12 @@ The following usage will do the same but will also mount persistent directory fo
 docker run --rm -it -p 127.0.0.1:8080:80 -v ~/limbo_storage:/tmp/storage $(docker build --quiet .)
 ```
 
+Run Limbo self-tests in docker:
+
+```
+docker run --rm -it $(docker build --file tests/Dockerfile --quiet .)
+```
+
 ### Run in Windows
 
 You can also run the service in Windows by the following command:

@@ -1,12 +1,13 @@
 /.cache/
-/__pycache__/
+/.git/
+**/__pycache__/
 /.pytest_cache/
 /storage/
-/tests/
 /venv/
 /.venv/
+/CHANGELOG.md
 /CREDITS
 /Dockerfile
 /LICENSE
-/run-server-on-windows.cmd
 /README.md
+/run-server-on-windows.cmd
