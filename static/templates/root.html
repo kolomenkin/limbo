@@ -124,7 +124,7 @@
 
 			Dropzone.options.dropzone = {
 				paramName: "file",
-				maxFilesize: 10000, // MB
+				maxFilesize: 30000, // MB
 				addRemoveLinks: true,
 				dictCancelUpload: "Cancel",
 				dictRemoveFile: "Remove",
@@ -136,7 +136,7 @@
 					})
 
 					this.on("removedfile", function(file) {
-						removeFileRequest(file.name)
+						removeFileRequest(null, file.name)
 					})
 
 					this.on("queuecomplete", function(){
@@ -153,7 +153,9 @@
 						"fileName": fileName
 					},
 					success: function() {
-						$("#row_"+idx).remove()
+                        if (idx !== null) {
+                            $("#row_"+idx).remove()
+                        }
 					},
 					error: function() {
 						alert("Can't remove " + fileName)
