@@ -1,0 +1,15 @@
+language: python
+
+cache: pip
+
+python:
+    - "3.4"
+    - "3.5"
+    - "3.6"
+
+install:
+    - pip install --upgrade pip setuptools
+    - pip install -r requirements.dev.txt
+
+script:
+    - make test
