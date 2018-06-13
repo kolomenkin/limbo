@@ -121,8 +121,9 @@ def cgi_addtext():
     original_filename = text_title + '.txt'
     body = bytearray(bottle.request.forms.body, encoding='utf-8')
 
-    with storage.open_file_to_write(original_filename) as file:
-        file.write(body)
+    with storage.open_file_writer(original_filename) as writer:
+        writer.write(body)
+    writer.complete()
 
     log('Shared text size: ' + str(len(body)))
     return 'OK'
@@ -131,16 +132,16 @@ def cgi_addtext():
 class StorageFileTarget(BaseTarget):
     def __init__(self):
         super().__init__()
-        self._fd = None
+        self._writer = None
 
     def start(self):
-        self._fd = storage.open_file_to_write(self.multipart_filename)
+        self._writer = storage.open_file_writer(self.multipart_filename)
 
     def data_received(self, chunk):
-        self._fd.write(chunk)
+        self._writer.write(chunk)
 
     def finish(self):
-        self._fd.close()
+        self._writer.complete()
 
 
 @bottle.post('/cgi/upload/')
@@ -167,18 +168,20 @@ def cgi_upload():
         size = 0
         upload = bottle.request.files.get('file')
         if upload is None:
-            raise ValueError('ERROR! "file" multipart field was not found')
+            raise Exception('ERROR! "file" multipart field was not found')
         original_filename = upload.raw_filename
         body = upload.file
 
-        with storage.open_file_to_write(original_filename) as file:
+        with storage.open_file_writer(original_filename) as writer:
             while True:
                 chunk = body.read(64 * 1024)
                 if not chunk:
                     break
                 if not config.DISABLE_STORAGE:
-                    file.write(chunk)
+                    writer.write(chunk)
                 size += len(chunk)
+
+        writer.complete()
 
         log('Uploaded file size: ' + str(size))
     return 'OK'

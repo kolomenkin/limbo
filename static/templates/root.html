@@ -136,7 +136,9 @@
 					})
 
 					this.on("removedfile", function(file) {
-						removeFileRequest(null, file.name)
+                        // Next line is commented since incomplete upload support
+                        // is implemented on server level
+						//removeFileRequest(null, file.name)
 					})
 
 					this.on("queuecomplete", function(){

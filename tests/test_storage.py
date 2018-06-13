@@ -30,9 +30,10 @@ class FileStorageTestCase(TestCase):
 
         self.assertEqual(0, len(storage.enumerate_files()))
 
-        with storage.open_file_to_write(original_filename) as file:
+        with storage.open_file_writer(original_filename) as writer:
             if len(original_filedata) > 0:
-                file.write(original_filedata)
+                writer.write(original_filedata)
+        writer.complete()
 
         files = storage.enumerate_files()
 
@@ -94,13 +95,15 @@ class FileStorageTestCase(TestCase):
 
         self.assertEqual(0, len(storage.enumerate_files()))
 
-        with storage.open_file_to_write(original_filename1) as file:
-            file.write(original_filedata1)
+        with storage.open_file_writer(original_filename1) as writer:
+            writer.write(original_filedata1)
+        writer.complete()
 
         self.assertEqual(1, len(storage.enumerate_files()))
 
-        with storage.open_file_to_write(original_filename2) as file:
-            file.write(original_filedata2)
+        with storage.open_file_writer(original_filename2) as writer:
+            writer.write(original_filedata2)
+        writer.complete()
 
         files = storage.enumerate_files()
         self.assertEqual(2, len(files))
@@ -132,14 +135,17 @@ class FileStorageTestCase(TestCase):
 
         self.assertEqual(0, len(storage.enumerate_files()))
 
-        with storage.open_file_to_write('file1') as file:
-            file.write(b'')
+        with storage.open_file_writer('file1') as writer:
+            writer.write(b'')
+        writer.complete()
 
-        with storage.open_file_to_write('file2') as file:
-            file.write(b'AAA')
+        with storage.open_file_writer('file2') as writer:
+            writer.write(b'AAA')
+        writer.complete()
 
-        with storage.open_file_to_write('file3') as file:
-            file.write(b'bbbbb')
+        with storage.open_file_writer('file3') as writer:
+            writer.write(b'bbbbb')
+        writer.complete()
 
         self.assertEqual(3, len(storage.enumerate_files()))
 

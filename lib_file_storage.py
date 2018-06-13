@@ -8,10 +8,12 @@ from io import open as io_open
 from os import listdir as os_listdir, \
                makedirs as os_makedirs, \
                path as os_path, \
-               remove as os_remove
+               remove as os_remove, \
+               rename as os_rename
 import re
 import threading
 from time import time as time_time
+from uuid import uuid4
 
 
 # ==========================================
@@ -40,11 +42,37 @@ def clean_filename(filename):
     return s
 
 
+class AtomicFile:
+    def __init__(self, temp_filename, final_filename):
+        if os_path.isfile(final_filename):
+            raise Exception('Destination file already exists')
+        self._temp_filename = temp_filename
+        self._final_filename = final_filename
+        self._fd = io_open(self._temp_filename, 'wb')
+
+    def write(self, data):
+        self._fd.write(data)
+
+    def complete(self):
+        if not self._fd.closed:
+            self._fd.close()
+        os_rename(self._temp_filename, self._final_filename)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self._fd.closed:
+            self._fd.close()
+
+
 class FileStorage:
     def __init__(self, storage_directory, max_store_time_seconds):
         log('FileStorage: create(' + storage_directory + ', max ' +
             str(max_store_time_seconds) + ' sec)')
         self._storage_directory = os_path.abspath(storage_directory)
+        self._temp_directory = \
+            os_path.join(self._storage_directory, 'incomplete')
         self._max_store_time_seconds = max_store_time_seconds
         self._retension_thread = None
         self._protect_stop = threading.Lock()
@@ -53,6 +81,9 @@ class FileStorage:
 
         if not os_path.isdir(self._storage_directory):
             os_makedirs(self._storage_directory, 755)
+
+        if not os_path.isdir(self._temp_directory):
+            os_makedirs(self._temp_directory, 755)
 
     def start(self):
         log('FileStorage: start')
@@ -83,11 +114,13 @@ class FileStorage:
                     })
         return files
 
-    def open_file_to_write(self, original_filename):
+    def open_file_writer(self, original_filename):
         disk_filename = FileStorage._fname_original_to_disk(original_filename)
+        temp_disk_filename = uuid4().hex + '.' + disk_filename
+        temp_fullname = os_path.join(self._temp_directory, temp_disk_filename)
         fullname = os_path.join(self._storage_directory, disk_filename)
         log('FileStorage: Upload file: ' + disk_filename)
-        return io_open(fullname, 'xb')
+        return AtomicFile(temp_fullname, fullname)
 
     def get_file_info_to_read(self, url_filename):
         disk_filename = FileStorage._fname_url_to_disk(url_filename)
@@ -104,9 +137,16 @@ class FileStorage:
     def remove_all_files(self):
         for disk_filename in os_listdir(self._storage_directory):
             fullname = os_path.join(self._storage_directory, disk_filename)
-            log('FileStorage: Remove file: "' + disk_filename +
-                '"; size: ' + str(os_path.getsize(fullname)))
-            os_remove(fullname)
+            if os_path.isfile(fullname):
+                log('FileStorage: Remove file: "' + disk_filename +
+                    '"; size: ' + str(os_path.getsize(fullname)))
+                os_remove(fullname)
+        for disk_filename in os_listdir(self._temp_directory):
+            fullname = os_path.join(self._temp_directory, disk_filename)
+            if os_path.isfile(fullname):
+                log('FileStorage: Remove temp file: "' + disk_filename +
+                    '"; size: ' + str(os_path.getsize(fullname)))
+                os_remove(fullname)
 
     def _fname_original_to_disk(original_filename):
         return FileStorage._canonize_file(original_filename)
@@ -151,5 +191,15 @@ class FileStorage:
             if os_path.isfile(fullname):
                 modified_unixtime = get_file_modified_unixtime(fullname)
                 if now - modified_unixtime > self._max_store_time_seconds:
-                    log('FileStorage: Remove outdated file: ' + fullname)
+                    log('FileStorage: Remove outdated file: ' + fullname +
+                        '"; size: ' + str(os_path.getsize(fullname)))
+                    os_remove(fullname)
+
+        for file in os_listdir(self._temp_directory):
+            fullname = os_path.join(self._temp_directory, file)
+            if os_path.isfile(fullname):
+                modified_unixtime = get_file_modified_unixtime(fullname)
+                if now - modified_unixtime > 15 * 60:  # every 15 minutes
+                    log('FileStorage: Remove outdated temp file: ' + fullname +
+                        '"; size: ' + str(os_path.getsize(fullname)))
                     os_remove(fullname)
