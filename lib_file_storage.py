@@ -5,6 +5,7 @@
 from lib_common import log, get_file_modified_unixtime
 
 from io import open as io_open
+from logging import error as logging_error
 from os import listdir as os_listdir, \
                makedirs as os_makedirs, \
                path as os_path, \
@@ -12,7 +13,8 @@ from os import listdir as os_listdir, \
                rename as os_rename
 import re
 import threading
-from time import time as time_time
+from time import time as time_time, sleep as time_sleep
+from traceback import format_exc as traceback_format_exc
 from uuid import uuid4
 
 
@@ -172,18 +174,24 @@ class FileStorage:
         log('FileStorage: Retension thread started')
         previous_check_time = 0
         while True:
-            now = time_time()
-            if now - previous_check_time > 10 * 60:  # every 10 minutes
-                log('FileStorage: Check for outdated files')
-                self._check_retention()
-                previous_check_time = time_time()
+            try:
+                now = time_time()
+                if now - previous_check_time > 10 * 60:  # every 10 minutes
+                    log('FileStorage: Check for outdated files')
+                    previous_check_time = time_time()
+                    self._check_retention()
 
-            # Wait for 60 seconds with possibility to stop on stop() request:
-            with self._condition_stop:
-                if not self._stopping:
-                    self._condition_stop.wait(60)
-                if self._stopping:
-                    break
+                # Wait for 60 seconds with a possibility
+                # to be interrupted through stop() call:
+                with self._condition_stop:
+                    if not self._stopping:
+                        self._condition_stop.wait(60)
+                    if self._stopping:
+                        log('Retension thread found stop signal')
+                        break
+            except Exception:
+                logging_error(traceback_format_exc())
+                time_sleep(60)  # prevent from flooding
 
     def _check_retention(self):
         now = time_time()
