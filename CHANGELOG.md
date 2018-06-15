@@ -4,6 +4,15 @@ CHANGELOG
 future release
 ------
 
+
+v1.4.1 [2018-06-15]
+------
+
+- fix bug with wrong directory credentials (partly existed from 1.0, became blocking in 1.4)
+- refactor lib_file_storage.py to catch and ignore exceptions in retension thread
+- force redownload of updated recently main.css
+- add travis script for automated build
+
 v1.4 [2018-06-13]
 ------
 

@@ -1,8 +1,18 @@
 # Limbo: the file sharing lightweight service
 
+[![Master branch travis build status](https://travis-ci.org/kolomenkin/limbo.svg?branch=master)](https://travis-ci.org/kolomenkin/limbo)
+
 This project implements lightweight web page with easy possibility to upload, download, list, remove files.
 It requires no login.
 All files are automatically deleted 24 hours after upload.
+
+Change log: [CHANGELOG.md](CHANGELOG.md)
+
+Requirements: [requirements.txt](requirements.txt)
+
+Credits: [CREDITS](CREDITS)
+
+License: [LICENSE](LICENSE)
 
 ## Configuration
 
