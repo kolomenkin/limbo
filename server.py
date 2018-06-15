@@ -123,7 +123,6 @@ def cgi_addtext():
 
     with storage.open_file_writer(original_filename) as writer:
         writer.write(body)
-    writer.complete()
 
     log('Shared text size: ' + str(len(body)))
     return 'OK'
@@ -141,7 +140,7 @@ class StorageFileTarget(BaseTarget):
         self._writer.write(chunk)
 
     def finish(self):
-        self._writer.complete()
+        self._writer.close()
 
 
 @bottle.post('/cgi/upload/')
@@ -180,8 +179,6 @@ def cgi_upload():
                 if not config.DISABLE_STORAGE:
                     writer.write(chunk)
                 size += len(chunk)
-
-        writer.complete()
 
         log('Uploaded file size: ' + str(size))
     return 'OK'

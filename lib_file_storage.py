@@ -53,17 +53,18 @@ class AtomicFile:
     def write(self, data):
         self._fd.write(data)
 
-    def complete(self):
-        if not self._fd.closed:
-            self._fd.close()
+    def close(self):
+        self._fd.close()
         os_rename(self._temp_filename, self._final_filename)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not self._fd.closed:
-            self._fd.close()
+        self._fd.close()
+        if exc_tb is None:
+            # No exception, so rename
+            os_rename(self._temp_filename, self._final_filename)
 
 
 class FileStorage:

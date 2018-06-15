@@ -33,7 +33,6 @@ class FileStorageTestCase(TestCase):
         with storage.open_file_writer(original_filename) as writer:
             if len(original_filedata) > 0:
                 writer.write(original_filedata)
-        writer.complete()
 
         files = storage.enumerate_files()
 
@@ -97,13 +96,11 @@ class FileStorageTestCase(TestCase):
 
         with storage.open_file_writer(original_filename1) as writer:
             writer.write(original_filedata1)
-        writer.complete()
 
         self.assertEqual(1, len(storage.enumerate_files()))
 
         with storage.open_file_writer(original_filename2) as writer:
             writer.write(original_filedata2)
-        writer.complete()
 
         files = storage.enumerate_files()
         self.assertEqual(2, len(files))
@@ -137,15 +134,12 @@ class FileStorageTestCase(TestCase):
 
         with storage.open_file_writer('file1') as writer:
             writer.write(b'')
-        writer.complete()
 
         with storage.open_file_writer('file2') as writer:
             writer.write(b'AAA')
-        writer.complete()
 
         with storage.open_file_writer('file3') as writer:
             writer.write(b'bbbbb')
-        writer.complete()
 
         self.assertEqual(3, len(storage.enumerate_files()))
 
