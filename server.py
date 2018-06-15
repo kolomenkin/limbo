@@ -205,7 +205,7 @@ def cgi_remove_all():
 
 @bottle.route('/static/<urlpath:path>')
 def server_static(urlpath):
-    log('Static file requested: ' + urlpath)
+    # log('Static file requested: ' + urlpath)
     root_folder = os_path.abspath(os_path.dirname(__file__))
     response = bottle.static_file(urlpath,
                                   root=os_path.join(root_folder, 'static'))
