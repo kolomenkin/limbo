@@ -80,10 +80,10 @@ class FileStorage:
         self._stopping = False
 
         if not os_path.isdir(self._storage_directory):
-            os_makedirs(self._storage_directory, 755)
+            os_makedirs(self._storage_directory, 0o755)
 
         if not os_path.isdir(self._temp_directory):
-            os_makedirs(self._temp_directory, 755)
+            os_makedirs(self._temp_directory, 0o755)
 
     def start(self):
         log('FileStorage: start')
