@@ -7,7 +7,7 @@ RUN apk update \
         musl-dev \
     && pip install \
         bottle==0.12.13 \
-        streaming_form_data==0.6.0 \
+        streaming_form_data==0.6.1 \
     && pip install \
         flake8==3.5.0 \
         numpy==1.14.5 \
