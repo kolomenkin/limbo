@@ -82,11 +82,7 @@ class FileStorage:
         self._condition_stop = threading.Condition(self._protect_stop)
         self._stopping = False
 
-        if not os_path.isdir(self._storage_directory):
-            os_makedirs(self._storage_directory, 0o755)
-
-        if not os_path.isdir(self._temp_directory):
-            os_makedirs(self._temp_directory, 0o755)
+        self._create_dirs()
 
     def start(self):
         log('FileStorage: start')
@@ -102,6 +98,8 @@ class FileStorage:
         self._retension_thread.join()
 
     def enumerate_files(self):
+        if not os_path.isdir(self._storage_directory):
+            return []
         files = []
         for disk_filename in os_listdir(self._storage_directory):
             fullname = os_path.join(self._storage_directory, disk_filename)
@@ -118,6 +116,7 @@ class FileStorage:
         return files
 
     def open_file_writer(self, original_filename):
+        self._create_dirs()
         disk_filename = FileStorage._fname_original_to_disk(original_filename)
         temp_disk_filename = uuid4().hex + '.' + disk_filename
         temp_fullname = os_path.join(self._temp_directory, temp_disk_filename)
@@ -138,12 +137,16 @@ class FileStorage:
         os_remove(fullname)
 
     def remove_all_files(self):
+        if not os_path.isdir(self._storage_directory):
+            return
         for disk_filename in os_listdir(self._storage_directory):
             fullname = os_path.join(self._storage_directory, disk_filename)
             if os_path.isfile(fullname):
                 log('FileStorage: Remove file: "' + disk_filename +
                     '"; size: ' + str(os_path.getsize(fullname)))
                 os_remove(fullname)
+        if not os_path.isdir(self._temp_directory):
+            return
         for disk_filename in os_listdir(self._temp_directory):
             fullname = os_path.join(self._temp_directory, disk_filename)
             if os_path.isfile(fullname):
@@ -170,6 +173,13 @@ class FileStorage:
                             filename)
         return canonizeed
 
+    def _create_dirs(self):
+        if not os_path.isdir(self._storage_directory):
+            os_makedirs(self._storage_directory, 0o755)
+
+        if not os_path.isdir(self._temp_directory):
+            os_makedirs(self._temp_directory, 0o755)
+
     def _retension_thread_procedure(self):
         log('FileStorage: Retension thread started')
         previous_check_time = 0
@@ -195,6 +205,8 @@ class FileStorage:
 
     def _check_retention(self):
         now = time_time()
+        if not os_path.isdir(self._storage_directory):
+            return
         for file in os_listdir(self._storage_directory):
             fullname = os_path.join(self._storage_directory, file)
             if os_path.isfile(fullname):
@@ -204,6 +216,8 @@ class FileStorage:
                         '"; size: ' + str(os_path.getsize(fullname)))
                     os_remove(fullname)
 
+        if not os_path.isdir(self._temp_directory):
+            return
         for file in os_listdir(self._temp_directory):
             fullname = os_path.join(self._temp_directory, file)
             if os_path.isfile(fullname):
