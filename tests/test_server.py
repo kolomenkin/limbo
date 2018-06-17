@@ -9,9 +9,10 @@ from sys import argv as sys_argv
 from tempfile import TemporaryDirectory
 from time import strftime as time_strftime
 from unittest import TestCase
+from urllib.parse import urlparse as urllib_urlparse
 
-LISTEN_HOST = '127.0.0.1'
-LISTEN_PORT = 35080
+DEFAULT_LISTEN_HOST = '127.0.0.1'
+DEFAULT_LISTEN_PORT = 35080
 
 
 def log(*args):
@@ -39,9 +40,10 @@ def get_random_text(size, seed):
 
 
 # http://code.activestate.com/recipes/576655-wait-for-network-service-to-appear/
-def wait_net_service(server, port, timeout=None):
+def wait_net_service(host, port, timeout=None):
     import socket
     from time import sleep, time as now
+    log('Waiting for web server: ' + host + ':' + str(port))
 
     s = socket.socket()
     if timeout:
@@ -50,11 +52,11 @@ def wait_net_service(server, port, timeout=None):
     while True:
         try:
             if timeout:
-                next_timeout = end - now()
-                if next_timeout < 0:
+                if now() > end:
+                    log('ERROR! Network sockets connect waiting timeout!')
                     return False
 
-            s.connect((server, port))
+            s.connect((host, port))
 
         except socket.timeout:
             sleep(0.1)
@@ -68,6 +70,30 @@ def wait_net_service(server, port, timeout=None):
             return True
 
 
+def run_child_server(server_name, host, port):
+    script_dir = os_path.dirname(os_path.abspath(__file__))
+    root_dir = os_path.join(script_dir, '..')
+    server_py = os_path.join(root_dir, 'server.py')
+
+    tmpdir = TemporaryDirectory()
+    log('created temporary directory: ' + tmpdir.name)
+
+    subenv = os_environ.copy()
+    subenv['LIMBO_WEB_SERVER'] = server_name
+    subenv['LIMBO_LISTEN_HOST'] = host
+    subenv['LIMBO_LISTEN_PORT'] = str(port)
+    subenv['LIMBO_STORAGE_DIRECTORY'] = tmpdir.name
+
+    pid = subprocess_Popen(['python', server_py], cwd=root_dir, env=subenv)
+    try:
+        wait_net_service(host, port, 10)
+    except Exception:
+        pid.terminate()
+        tmpdir.cleanup()
+        raise
+    return [tmpdir, pid]
+
+
 class ServerTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -77,27 +103,9 @@ class ServerTestCase(TestCase):
         self._server_name = None
         self._base_url = None
 
-    def RunServer(self, server_name, port):
-        script_dir = os_path.dirname(os_path.abspath(__file__))
-        root_dir = os_path.join(script_dir, '..')
-        server_py = os_path.join(root_dir, 'server.py')
-
-        tmpdirname = TemporaryDirectory()
-        log('created temporary directory: ' + tmpdirname.name)
-
-        subenv = os_environ.copy()
-        subenv['LIMBO_WEB_SERVER'] = server_name
-        subenv['LIMBO_LISTEN_HOST'] = LISTEN_HOST
-        subenv['LIMBO_LISTEN_PORT'] = str(port)
-        subenv['LIMBO_STORAGE_DIRECTORY'] = tmpdirname.name
-
-        pid = subprocess_Popen(['python', server_py], cwd=root_dir, env=subenv)
-        wait_net_service(LISTEN_HOST, port, 10)
-        return [tmpdirname, pid]
-
     def CheckHttpError(self, r):
         if r.status_code != 200:
-            raise ValueError('Bad server reply code: ' + str(r.status_code))
+            raise Exception('Bad server reply code: ' + str(r.status_code))
 
     def GetStoredFiles(self):
         url = self._base_url + '/cgi/enumerate/'
@@ -222,69 +230,83 @@ class ServerTestCase(TestCase):
         self.RemoveAllFiles()
         self.assertEqual(0, len(self.GetStoredFiles()))
 
-    def DoAllTests(self, server_name):
-        global LISTEN_PORT
-        port = LISTEN_PORT
+    def DoAllTests(self, server_name, base_url):
         self._server_name = server_name
-        self._base_url = 'http://' + LISTEN_HOST + ':' + str(port)
-        log('DoTest("' + self._server_name + '") start')
-        tmpdirname, pid = self.RunServer(self._server_name, port)
+        self._base_url = base_url.rstrip('/')
 
-        with tmpdirname:
+        files = self.GetStoredFiles()
+        self.assertEqual(0, len(files))
+
+        self.DoTestUploadText('a', '')
+        self.DoTestUploadText('file.txt', 'abcdef')
+        text = get_random_text(90000, 42)
+        self.DoTestUploadText('some_file.dat', text)
+
+        self.DoTestUploadFile('a', b'')
+        self.DoTestUploadFile('file.txt', b'abcdef')
+        data = get_random_bytes(1234567, 42)
+        self.DoTestUploadFile('some_file.dat', data)
+
+        # russian is used in file name
+        # filename: русский.файл
+        #      hex: D1 80 D1 83 D1 81 D1 81 D0 BA D0 B8
+        #           D0 B9 2E D1 84 D0 B0 D0 B9 D0 BB
+        filename = b64decode('0YDRg9GB0YHQutC40Lku0YTQsNC50Ls=')
+        filename = filename.decode('utf-8')
+        # Paste server is known as not supporting utf-8 in file names
+        if self._server_name != 'paste':
+            self.DoTestUploadFile(filename, b'some text')
+
+        self.DoTestFewFiles()
+
+        self.RemoveAllFiles()
+        self.assertEqual(0, len(self.GetStoredFiles()))
+
+    def RunServerAndDoAllTests(self, server_name):
+        global DEFAULT_LISTEN_HOST, DEFAULT_LISTEN_PORT
+        host = DEFAULT_LISTEN_HOST
+        port = DEFAULT_LISTEN_PORT
+        base_url = 'http://' + host + ':' + str(port)
+        log('RunServerAndDoAllTests("' + server_name + '") start')
+        tmpdir, pid = run_child_server(server_name, host, port)
+
+        with tmpdir:
             try:
-                files = self.GetStoredFiles()
-                self.assertEqual(0, len(files))
-
-                self.DoTestUploadText('a', '')
-                self.DoTestUploadText('file.txt', 'abcdef')
-                text = get_random_text(90000, 42)
-                self.DoTestUploadText('some_file.dat', text)
-
-                self.DoTestUploadFile('a', b'')
-                self.DoTestUploadFile('file.txt', b'abcdef')
-                data = get_random_bytes(1234567, 42)
-                self.DoTestUploadFile('some_file.dat', data)
-
-                # russian is used in file name
-                # filename: русский.файл
-                #      hex: D1 80 D1 83 D1 81 D1 81 D0 BA D0 B8
-                #           D0 B9 2E D1 84 D0 B0 D0 B9 D0 BB
-                filename = b64decode('0YDRg9GB0YHQutC40Lku0YTQsNC50Ls=')
-                filename = filename.decode('utf-8')
-                # Paste server is known as not supporting utf-8 in file names
-                if self._server_name != 'paste':
-                    self.DoTestUploadFile(filename, b'some text')
-
-                self.DoTestFewFiles()
-
+                self.DoAllTests(server_name, base_url)
             finally:
                 pid.terminate()
 
-        tmpdirname = None
-        log('DoAllTests("' + self._server_name + '") finished')
+        log('RunServerAndDoAllTests("' + self._server_name + '") finished')
 
-    def test_cherrypy(self): self.DoAllTests('cherrypy')
+    def test_cherrypy(self): self.RunServerAndDoAllTests('cherrypy')
 
-    # def test_flup(self): self.DoAllTests('flup')
+    # def test_flup(self): self.RunServerAndDoAllTests('flup')
 
-    # def test_gevent(self): self.DoAllTests('gevent')
+    # def test_gevent(self): self.RunServerAndDoAllTests('gevent')
 
-    # def test_gunicorn(self): self.DoAllTests('gunicorn')
+    # def test_gunicorn(self): self.RunServerAndDoAllTests('gunicorn')
 
     # Paste server is known as not supporting utf-8 in file names
-    def test_paste(self): self.DoAllTests('paste')
+    def test_paste(self): self.RunServerAndDoAllTests('paste')
 
-    def test_tornado(self): self.DoAllTests('tornado')
+    def test_tornado(self): self.RunServerAndDoAllTests('tornado')
 
-    def test_twisted(self): self.DoAllTests('twisted')
+    def test_twisted(self): self.RunServerAndDoAllTests('twisted')
 
-    def test_waitress(self): self.DoAllTests('waitress')
+    def test_waitress(self): self.RunServerAndDoAllTests('waitress')
 
-    # def test_wsgiref(self): self.DoAllTests('wsgiref')
+    # def test_wsgiref(self): self.RunServerAndDoAllTests('wsgiref')
 
 
 if __name__ == '__main__':
     server_name = sys_argv[1] if len(sys_argv) > 1 else 'cherrypy'
     log('Begin testing ' + server_name + '...')
     test = ServerTestCase()
-    test.DoAllTests(server_name)
+    if server_name.startswith('http://') or server_name.startswith('https://'):
+        server_base_url = server_name
+        log('Testing external server: ' + server_base_url)
+        url = urllib_urlparse(server_base_url)
+        wait_net_service(url.hostname, url.port, 10)
+        test.DoAllTests('external', server_base_url)
+    else:
+        test.RunServerAndDoAllTests(server_name)

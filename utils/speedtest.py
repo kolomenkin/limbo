@@ -48,7 +48,7 @@ class SpeedTest:
 
     def CheckHttpError(self, r):
         if r.status_code != 200:
-            raise ValueError('Bad server reply code: ' + str(r.status_code))
+            raise Exception('Bad server reply code: ' + str(r.status_code))
 
     def GetStoredFiles(self):
         url = self._base_url + '/cgi/enumerate/'
