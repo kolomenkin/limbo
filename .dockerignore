@@ -1,10 +1,12 @@
 /.cache/
 /.git/
+/.idea/
 **/__pycache__/
 /.pytest_cache/
 /storage/
 /venv/
 /.venv/
+/.venv2/
 /CHANGELOG.md
 /CREDITS
 /Dockerfile

@@ -1,6 +1,8 @@
 /.cache/
+/.idea/
 __pycache__/
 /.pytest_cache/
 /storage/
 /venv/
 /.venv/
+/.venv2/
