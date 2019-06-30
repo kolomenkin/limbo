@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial  # required for Python >= 3.7
 
 # Use containers instead of full VMs for faster startup.
 sudo: false
@@ -11,6 +11,7 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
+    - "3.7"
 
 env: HUMAN_BUILD_NAME="'Run tests'"
 
