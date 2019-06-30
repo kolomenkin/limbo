@@ -1,0 +1,7 @@
+[flake8]
+exclude =
+    .git,
+    storage,
+    venv,
+    .venv,
+    .venv2
