@@ -35,7 +35,7 @@ matrix:
         - docker
     install:
         - pip install numpy==1.11.3 requests==2.18.4
-        - docker build .
+        - docker build --pull .
     script:
         - echo "$HUMAN_BUILD_NAME..."
         - docker run --rm -d --name limbo_container -p 127.0.0.1:22080:80 "$(docker build --quiet .)"
@@ -53,7 +53,7 @@ matrix:
     services:
         - docker
     install:
-        - docker build --file tests/Dockerfile .
+        - docker build --pull --file tests/Dockerfile .
     script:
         - echo "$HUMAN_BUILD_NAME..."
         - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)"
