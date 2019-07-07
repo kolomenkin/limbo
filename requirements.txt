@@ -1,2 +1,2 @@
 bottle>=0.12.13
-streaming_form_data>=0.6.1
+streaming_form_data>=1.1.0

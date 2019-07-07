@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.7-alpine
 
 COPY *.py \
     requirements.txt \
@@ -6,8 +6,7 @@ COPY *.py \
 
 COPY static /opt/limbo/static/
 
-RUN apk update \
-    && apk upgrade \
+RUN set -ex \
     && apk add --no-cache \
         gcc \
         musl-dev \
