@@ -10,14 +10,14 @@ RUN apk update \
         streaming_form_data==0.6.1 \
     && pip install \
         flake8==3.5.0 \
-        numpy==1.14.5 \
+        numpy==1.16.0 \
         pytest==3.6.1 \
-        requests==2.18.4 \
+        requests==2.20.0 \
     && pip install \
         cherrypy==8.9.1 \
         paste==2.0.3 \
         tornado==5.0.2 \
-        twisted==18.4.0 \
+        twisted==19.2.1 \
         waitress==1.1.0 \
     && apk del \
         gcc \
