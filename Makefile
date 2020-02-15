@@ -12,3 +12,9 @@ test_server:
 
 speedtest:
 	PYTHONPATH=. python ./utils/speedtest.py ${SERVER}
+
+check-md:
+# Using two slashes at the beginning of the paths for Windows bash shell
+	docker run --rm --network none -v "${CURDIR}:/markdown:ro" \
+		06kellyjac/markdownlint-cli:0.21.0-alpine \
+			//markdown/
