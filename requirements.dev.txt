@@ -8,5 +8,5 @@ requests==2.20.0
 cherrypy==8.9.1
 paste==2.0.3
 tornado==5.0.2
-twisted==19.2.1
+twisted==19.7.0
 waitress==1.1.0
