@@ -33,7 +33,7 @@ You can edit [config.py](config.py) to set custom options. All of them may be ov
 ## How to run the service
 
 1. Copy files from this repo
-2. Install service dependecies
+2. Install service dependencies
     ```
     python3 -m pip install -r requirements.txt
     ```
@@ -47,7 +47,7 @@ You can edit [config.py](config.py) to set custom options. All of them may be ov
 
 The following command will build docker image and will run container listening on localhost:8080.
 After container is stopped it will be automatically deleted with all currently stored files.
-Don't forget to elevate priviledges before running docker! (sudo)
+Don't forget to elevate privileges before running docker! (sudo)
 
 ```
 docker run --rm -it -p 127.0.0.1:8080:80 $(docker build --quiet .)
@@ -72,7 +72,7 @@ You can also run the service in Windows by the following command:
 run-server-on-windows.cmd
 ```
 
-### Choosing underlaying web server
+### Choosing underlying web server
 
 Here is a number of bottle-compliant WSGI web servers tested with Limbo.
 Particular web server versions can be checked in [requirements.dev.txt]
