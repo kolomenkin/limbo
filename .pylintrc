@@ -1,0 +1,31 @@
+# Pylint is a tool that checks for errors in Python code, tries to enforce a coding standard and looks for code smells.
+# (pip/pylint)
+# https://pylint.readthedocs.io/en/latest/index.html
+# https://docs.pylint.org/en/1.6.0/run.html#command-line-options
+
+[MASTER]
+
+# Add files or directories to the blacklist. They should be base names, not
+# paths.
+ignore=
+    .git,
+    .mypy_cache,
+    __pycache__,
+    .pytest_cache,
+    storage,
+    .temp,
+    .venv,
+    .venv2
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=120
+
+[MESSAGES CONTROL]
+
+disable=
+    # R0801: Similar lines in 2 files
+    duplicate-code,
+    # C0111 Missing docstring (module/class) (missing-docstring)
+    missing-docstring

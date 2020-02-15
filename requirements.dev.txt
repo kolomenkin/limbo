@@ -1,5 +1,6 @@
 # testing helpers
-flake8==3.5.0
+flake8==3.7.9
+mypy==0.761
 numpy==1.16.0
 pytest==3.6.1
 requests==2.20.0

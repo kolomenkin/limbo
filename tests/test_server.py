@@ -1,134 +1,109 @@
-#!/usr/bin/python3
-
+import os
+import sys
 from base64 import b64decode
-from numpy import random
-from os import path as os_path, environ as os_environ
-from requests import get as requests_get, post as requests_post
-from subprocess import Popen as subprocess_Popen
+from dataclasses import dataclass
+from subprocess import Popen
 from sys import argv as sys_argv
 from tempfile import TemporaryDirectory
-from time import strftime as time_strftime
+from time import strftime
+from typing import Optional, List, Sequence, Any
 from unittest import TestCase
-from urllib.parse import urlparse as urllib_urlparse
+from urllib.parse import urlparse
+
+import requests
+from dataclasses_json import dataclass_json, Undefined  # type: ignore
+from requests import Response
+
+from utils.testing_helpers import wait_net_service, get_random_text, get_random_bytes
 
 DEFAULT_LISTEN_HOST = '127.0.0.1'
 DEFAULT_LISTEN_PORT = 35080
 
 
-def log(*args):
-    print('TST>', time_strftime('%Y-%m-%d %H:%M:%S:'), *args)
+def log(*args: Any) -> None:
+    print(strftime('%Y-%m-%d %H:%M:%S     - tst - INFO -'), *args)
 
 
-def get_random_bytes(size, seed):
-    random.seed(seed)
-    return random.bytes(size)
+@dataclass
+class RunningServer:
+    temp_directory: 'TemporaryDirectory[str]'
+    process: 'Popen[bytes]'
 
 
-def get_random_text(size, seed):
-    random.seed(seed)
-    items = []
-    for c in range(ord('A'), ord('Z')+1):
-        items += chr(c)
-    for c in range(ord('a'), ord('z')+1):
-        items += chr(c)
-    for c in range(ord('0'), ord('9')+1):
-        items += chr(c)
-    items.extend(['.', ',', ';', ':', '!'])
-    items.extend([' ', ' ', ' ', ' '])
-    items += '\n'
-    return ''.join(random.choice(items, size))
-
-
-# http://code.activestate.com/recipes/576655-wait-for-network-service-to-appear/
-def wait_net_service(host, port, timeout=None):
-    import socket
-    from time import sleep, time as now
-    log('Waiting for web server: ' + host + ':' + str(port))
-
-    s = socket.socket()
-    if timeout:
-        end = now() + timeout
-
-    while True:
-        try:
-            if timeout:
-                if now() > end:
-                    log('ERROR! Network sockets connect waiting timeout!')
-                    return False
-
-            s.connect((host, port))
-
-        except socket.timeout:
-            sleep(0.1)
-            pass
-        except socket.error:
-            sleep(0.1)
-            pass
-
-        else:
-            s.close()
-            return True
-
-
-def run_child_server(server_name, host, port):
-    script_dir = os_path.dirname(os_path.abspath(__file__))
-    root_dir = os_path.join(script_dir, '..')
-    server_py = os_path.join(root_dir, 'server.py')
-
-    tmpdir = TemporaryDirectory()
-    log('created temporary directory: ' + tmpdir.name)
-
-    subenv = os_environ.copy()
-    subenv['LIMBO_WEB_SERVER'] = server_name
-    subenv['LIMBO_LISTEN_HOST'] = host
-    subenv['LIMBO_LISTEN_PORT'] = str(port)
-    subenv['LIMBO_STORAGE_DIRECTORY'] = tmpdir.name
-
-    pid = subprocess_Popen(['python', server_py], cwd=root_dir, env=subenv)
-    try:
-        wait_net_service(host, port, 10)
-    except Exception:
-        pid.terminate()
-        tmpdir.cleanup()
-        raise
-    return [tmpdir, pid]
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class FileOnServer:
+    url: str
+    url_filename: str
+    display_filename: str
+    size: int
 
 
 class ServerTestCase(TestCase):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(ServerTestCase, self).__init__(*args, **kwargs)
         # added to uploaded to server text fragment names:
         self._text_filename_postfix = '.txt'
-        self._server_name = None
-        self._base_url = None
+        self._server_name: Optional[str] = None
+        self._base_url: Optional[str] = None
 
-    def CheckHttpError(self, r):
-        if r.status_code != 200:
-            raise Exception('Bad server reply code: ' + str(r.status_code))
+    @staticmethod
+    def run_child_server(server_name: str, host: str, port: int) -> RunningServer:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.join(script_dir, '..')
+        server_py = os.path.join(root_dir, 'server.py')
 
-    def GetStoredFiles(self):
+        temp_directory = TemporaryDirectory()
+        log('created temporary directory: ' + temp_directory.name)
+
+        subenv = os.environ.copy()
+        subenv['LIMBO_WEB_SERVER'] = server_name
+        subenv['LIMBO_LISTEN_HOST'] = host
+        subenv['LIMBO_LISTEN_PORT'] = str(port)
+        subenv['LIMBO_STORAGE_DIRECTORY'] = temp_directory.name
+
+        process = Popen([sys.executable, server_py], cwd=root_dir, env=subenv)
+        try:
+            wait_net_service(host, port, 10)
+        except Exception as exc:
+            log('Got exception: ', repr(exc))
+            process.terminate()
+            temp_directory.cleanup()
+            raise
+        return RunningServer(temp_directory=temp_directory, process=process)
+
+    @staticmethod
+    def check_response(response: Response) -> None:
+        if response.status_code != 200:
+            raise Exception('Bad server reply code: ' + str(response.status_code))
+
+    def get_stored_files(self) -> Sequence[FileOnServer]:
+        assert self._base_url is not None
         url = self._base_url + '/cgi/enumerate/'
         log('Request: GET ' + url)
-        r = requests_get(url)
-        self.CheckHttpError(r)
-        files = r.json()
-        files = sorted(files, key=lambda item: item['display_filename'])
+        response = requests.get(url)
+        self.check_response(response)
+        files: List[FileOnServer] =\
+            FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member
+        files = sorted(files, key=lambda item: item.display_filename)
         return files
 
-    def DownloadFile(self, url_path):
+    def download_file(self, url_path: str) -> bytes:
+        assert self._base_url is not None
         url = self._base_url + url_path
         log('Request: GET ' + url)
-        r = requests_get(url)
-        self.CheckHttpError(r)
-        return r.content
+        response = requests.get(url)
+        self.check_response(response)
+        return response.content or b''
 
-    def UploadFile(self, original_filename, filedata):
+    def upload_file(self, original_filename: str, filedata: bytes) -> None:
+        assert self._base_url is not None
         url = self._base_url + '/cgi/upload/'
         log('Request: POST ' + url)
 
         # files = {'file': (original_filename, filedata)}
-        # r = requests_post(url, files=files)
+        # r = requests.post(url, files=files)
         # NOTE: requests library has bad support for
         #       upload files with utf-8 names
         # It encodes utf-8 file name in the following form:
@@ -141,172 +116,190 @@ class ServerTestCase(TestCase):
             + b'; name="file"; filename="' + encoded_filename \
             + b'"\r\n\r\n' + filedata + b'\r\n--' + boundary + b'--\r\n'
 
-        content_type = 'multipart/form-data; boundary=' \
-            + boundary.decode('utf-8')
+        content_type = 'multipart/form-data; boundary=' + boundary.decode('utf-8')
         headers = {'Content-Type': content_type}
 
-        r = requests_post(url, data=payload, headers=headers)
+        response = requests.post(url, data=payload, headers=headers)
 
-        self.CheckHttpError(r)
+        self.check_response(response)
 
-    def UploadText(self, title, text):
+    def upload_text(self, title: str, text: str) -> None:
+        assert self._base_url is not None
         url = self._base_url + '/cgi/addtext/'
         log('Request: POST ' + url)
         formdata = {'title': title, 'body': text}
-        r = requests_post(url, data=formdata)
-        self.CheckHttpError(r)
+        response = requests.post(url, data=formdata)
+        self.check_response(response)
 
-    def RemoveFile(self, url_filename):
+    def remove_file(self, url_filename: str) -> None:
+        assert self._base_url is not None
         url = self._base_url + '/cgi/remove/'
         log('Request: POST ' + url)
         formdata = {'fileName': url_filename}
-        r = requests_post(url, data=formdata)
-        self.CheckHttpError(r)
+        response = requests.post(url, data=formdata)
+        self.check_response(response)
 
-    def RemoveAllFiles(self):
+    def remove_all_files(self) -> None:
+        assert self._base_url is not None
         url = self._base_url + '/cgi/remove-all/'
         log('Request: POST ' + url)
-        r = requests_post(url, data='')
-        self.CheckHttpError(r)
+        response = requests.post(url, data='')
+        self.check_response(response)
 
-    def OnTestStart(self, test_name):
+    def on_test_start(self, test_name: str) -> None:
+        assert self._server_name is not None
         log('=============================================')
         log('TEST: ' + self._server_name + ': ' + test_name)
         log('=============================================')
 
-    def DoTestUploadFile(self, name, data):
-        self.OnTestStart('FileUpload("' + name + '")')
-        self.RemoveAllFiles()
-        self.assertEqual(0, len(self.GetStoredFiles()))
-        self.UploadFile(name, data)
-        files = self.GetStoredFiles()
+    def do_test_upload_file(self, name: str, data: bytes) -> None:
+        self.on_test_start('FileUpload("' + name + '")')
+        self.remove_all_files()
+        self.assertEqual(0, len(self.get_stored_files()))
+
+        self.upload_file(name, data)
+        files = self.get_stored_files()
         self.assertEqual(1, len(files))
-        log('File URL: ' + files[0]['url'])
-        self.assertEqual(name, files[0]['display_filename'])
-        self.assertEqual(len(data), files[0]['size'])
-        url_filename = files[0]['url_filename']
-        data2 = self.DownloadFile(files[0]['url'])
+        log('File URL: ' + files[0].url)
+        self.assertEqual(name, files[0].display_filename)
+        self.assertEqual(len(data), files[0].size)
+        url_filename = files[0].url_filename
+        data2 = self.download_file(files[0].url)
         self.assertEqual(data2, data)
-        self.RemoveFile(url_filename)
-        self.assertEqual(0, len(self.GetStoredFiles()))
+        self.remove_file(url_filename)
+        self.assertEqual(0, len(self.get_stored_files()))
 
-    def DoTestUploadText(self, name, text):
-        self.OnTestStart('TextUpload("' + name + '")')
-        self.RemoveAllFiles()
-        self.assertEqual(0, len(self.GetStoredFiles()))
-        self.UploadText(name, text)
-        files = self.GetStoredFiles()
+    def do_test_upload_text(self, name: str, text: str) -> None:
+        self.on_test_start('TextUpload("' + name + '")')
+        self.remove_all_files()
+        self.assertEqual(0, len(self.get_stored_files()))
+
+        self.upload_text(name, text)
+        files = self.get_stored_files()
         self.assertEqual(1, len(files))
-        log('File URL: ' + files[0]['url'])
-        self.assertEqual(name + self._text_filename_postfix,
-                         files[0]['display_filename'])
-        self.assertEqual(len(text), files[0]['size'])
-        data2 = self.DownloadFile(files[0]['url'])
+        log('File URL: ' + files[0].url)
+        self.assertEqual(name + self._text_filename_postfix, files[0].display_filename)
+        self.assertEqual(len(text), files[0].size)
+        data2 = self.download_file(files[0].url)
         self.assertEqual(data2, text.encode('utf-8'))
-        url_filename = files[0]['url_filename']
-        self.RemoveFile(url_filename)
-        self.assertEqual(0, len(self.GetStoredFiles()))
+        url_filename = files[0].url_filename
+        self.remove_file(url_filename)
+        self.assertEqual(0, len(self.get_stored_files()))
 
-    def DoTestFewFiles(self):
-        self.OnTestStart('FewFiles')
-        self.RemoveAllFiles()
-        self.assertEqual(0, len(self.GetStoredFiles()))
-        self.UploadText('data_A', 'aaa')
-        self.UploadText('data_B', 'bbb')
-        self.UploadFile('file1.zip', b'abcd')
-        self.UploadFile('file2.txt', b'ABCD')
-        files = self.GetStoredFiles()
+    def do_test_few_files(self) -> None:
+        self.on_test_start('FewFiles')
+        self.remove_all_files()
+        self.assertEqual(0, len(self.get_stored_files()))
+
+        self.upload_text('data_A', 'aaa')
+        self.upload_text('data_B', 'bbb')
+        self.upload_file('file1.zip', b'abcd')
+        self.upload_file('file2.txt', b'ABCD')
+        files = self.get_stored_files()
         self.assertEqual(4, len(files))
-        log('File URL: ' + files[0]['url'])
-        log('File URL: ' + files[1]['url'])
-        log('File URL: ' + files[2]['url'])
-        log('File URL: ' + files[3]['url'])
-        self.assertEqual('data_A' + self._text_filename_postfix,
-                         files[0]['display_filename'])
-        self.assertEqual('data_B' + self._text_filename_postfix,
-                         files[1]['display_filename'])
-        self.assertEqual('file1.zip', files[2]['display_filename'])
-        self.assertEqual('file2.txt', files[3]['display_filename'])
-        self.RemoveAllFiles()
-        self.assertEqual(0, len(self.GetStoredFiles()))
+        log('File URL: ' + files[0].url)
+        log('File URL: ' + files[1].url)
+        log('File URL: ' + files[2].url)
+        log('File URL: ' + files[3].url)
+        self.assertEqual('data_A' + self._text_filename_postfix, files[0].display_filename)
+        self.assertEqual('data_B' + self._text_filename_postfix, files[1].display_filename)
+        self.assertEqual('file1.zip', files[2].display_filename)
+        self.assertEqual('file2.txt', files[3].display_filename)
+        self.remove_all_files()
+        self.assertEqual(0, len(self.get_stored_files()))
 
-    def DoAllTests(self, server_name, base_url):
+    def do_all_tests(self, server_name: str, base_url: str) -> None:
         self._server_name = server_name
         self._base_url = base_url.rstrip('/')
 
-        files = self.GetStoredFiles()
+        files = self.get_stored_files()
         self.assertEqual(0, len(files))
 
-        self.DoTestUploadText('a', '')
-        self.DoTestUploadText('file.txt', 'abcdef')
+        self.do_test_upload_text('a', '')
+        self.do_test_upload_text('file.txt', 'abcdef')
         text = get_random_text(90000, 42)
-        self.DoTestUploadText('some_file.dat', text)
+        self.do_test_upload_text('some_file.dat', text)
 
-        self.DoTestUploadFile('a', b'')
-        self.DoTestUploadFile('file.txt', b'abcdef')
+        self.do_test_upload_file('a', b'')
+        self.do_test_upload_file('file.txt', b'abcdef')
         data = get_random_bytes(1234567, 42)
-        self.DoTestUploadFile('some_file.dat', data)
+        self.do_test_upload_file('some_file.dat', data)
 
         # russian is used in file name
         # filename: русский.файл
         #      hex: D1 80 D1 83 D1 81 D1 81 D0 BA D0 B8
         #           D0 B9 2E D1 84 D0 B0 D0 B9 D0 BB
-        filename = b64decode('0YDRg9GB0YHQutC40Lku0YTQsNC50Ls=')
-        filename = filename.decode('utf-8')
+        filename_bytes = b64decode('0YDRg9GB0YHQutC40Lku0YTQsNC50Ls=')
+        filename = filename_bytes.decode('utf-8')
         # Paste server is known as not supporting utf-8 in file names
         if self._server_name != 'paste':
-            self.DoTestUploadFile(filename, b'some text')
+            self.do_test_upload_file(filename, b'some text')
 
-        self.DoTestFewFiles()
+        self.do_test_few_files()
 
-        self.RemoveAllFiles()
-        self.assertEqual(0, len(self.GetStoredFiles()))
+        self.remove_all_files()
+        self.assertEqual(0, len(self.get_stored_files()))
 
-    def RunServerAndDoAllTests(self, server_name):
-        global DEFAULT_LISTEN_HOST, DEFAULT_LISTEN_PORT
+    def run_server_and_do_all_tests(self, server_name: str) -> None:
         host = DEFAULT_LISTEN_HOST
         port = DEFAULT_LISTEN_PORT
         base_url = 'http://' + host + ':' + str(port)
         log('RunServerAndDoAllTests("' + server_name + '") start')
-        tmpdir, pid = run_child_server(server_name, host, port)
+        server: RunningServer = self.run_child_server(server_name, host, port)
 
-        with tmpdir:
+        with server.temp_directory:
             try:
-                self.DoAllTests(server_name, base_url)
+                self.do_all_tests(server_name, base_url)
             finally:
-                pid.terminate()
+                server.process.terminate()
 
+        assert self._server_name is not None
         log('RunServerAndDoAllTests("' + self._server_name + '") finished')
 
-    def test_cherrypy(self): self.RunServerAndDoAllTests('cherrypy')
+    def test_cherrypy(self) -> None:
+        self.run_server_and_do_all_tests('cherrypy')
 
-    # def test_flup(self): self.RunServerAndDoAllTests('flup')
-
-    # def test_gevent(self): self.RunServerAndDoAllTests('gevent')
-
-    # def test_gunicorn(self): self.RunServerAndDoAllTests('gunicorn')
+    # def test_flup(self) -> None:
+    #     self.RunServerAndDoAllTests('flup')
+    #
+    # def test_gevent(self) -> None:
+    #     self.RunServerAndDoAllTests('gevent')
+    #
+    # def test_gunicorn(self) -> None:
+    #     self.RunServerAndDoAllTests('gunicorn')
 
     # Paste server is known as not supporting utf-8 in file names
-    def test_paste(self): self.RunServerAndDoAllTests('paste')
+    def test_paste(self) -> None:
+        self.run_server_and_do_all_tests('paste')
 
-    def test_tornado(self): self.RunServerAndDoAllTests('tornado')
+    def test_tornado(self) -> None:
+        self.run_server_and_do_all_tests('tornado')
 
-    def test_twisted(self): self.RunServerAndDoAllTests('twisted')
+    def test_twisted(self) -> None:
+        self.run_server_and_do_all_tests('twisted')
 
-    def test_waitress(self): self.RunServerAndDoAllTests('waitress')
+    def test_waitress(self) -> None:
+        self.run_server_and_do_all_tests('waitress')
 
-    # def test_wsgiref(self): self.RunServerAndDoAllTests('wsgiref')
+    # def test_wsgiref(self) -> None:
+    #     self.RunServerAndDoAllTests('wsgiref')
 
 
-if __name__ == '__main__':
+def main() -> None:
     server_name = sys_argv[1] if len(sys_argv) > 1 else 'cherrypy'
+
     log('Begin testing ' + server_name + '...')
     test = ServerTestCase()
     if server_name.startswith('http://') or server_name.startswith('https://'):
-        server_base_url = server_name
-        log('Testing external server: ' + server_base_url)
-        url = urllib_urlparse(server_base_url)
+        log('Testing external server: ' + server_name)
+        url = urlparse(server_name)
+        assert url.hostname is not None
+        assert url.port is not None
         wait_net_service(url.hostname, url.port, 10)
-        test.DoAllTests('external', server_base_url)
+        test.do_all_tests('external', server_name)
     else:
-        test.RunServerAndDoAllTests(server_name)
+        test.run_server_and_do_all_tests(server_name)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,16 @@
+# flake8 checks for PEP-8 compliance
+# http://flake8.pycqa.org/en/2.5.5/config.html
+
 [flake8]
+
+max-line-length = 120
+
 exclude =
-    .git,
-    storage,
-    venv,
-    .venv,
-    .venv2
+    ./.git/,
+    ./.mypy_cache/,
+    __pycache__/,
+    ./.pytest_cache/,
+    ./storage/,
+    ./.temp/,
+    ./.venv/,
+    ./.venv2/
