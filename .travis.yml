@@ -11,6 +11,7 @@ cache: pip
 python:
   - "3.6"
   - "3.7"
+  - "3.8"
 
 env: HUMAN_BUILD_NAME="'Run tests'"
 
@@ -35,7 +36,7 @@ matrix:
       services:
         - docker
       install:
-        - pip install numpy==1.11.3 requests==2.18.4
+        - pip install numpy==1.16.0 requests==2.20.0 dataclasses-json==0.3.8
         - docker build --pull .
       script:
         - echo "$HUMAN_BUILD_NAME..."
@@ -45,11 +46,24 @@ matrix:
         - docker stop limbo_container
 
     -
-      env: HUMAN_BUILD_NAME="'Run tests in docker'"
+      env: HUMAN_BUILD_NAME="'Run checks in different docker containers'"
       # Don't use any predefined language env
       # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
       language: generic
-      cache: none
+      python: none
+      sudo: required
+      services:
+        - docker
+      install: skip
+      script:
+        - echo "$HUMAN_BUILD_NAME..."
+        - make check-all-docker
+
+    -
+      env: HUMAN_BUILD_NAME="'Run checks in single docker container'"
+      # Don't use any predefined language env
+      # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
+      language: generic
       python: none
       sudo: required
       services:
@@ -58,4 +72,19 @@ matrix:
         - docker build --pull --file tests/Dockerfile .
       script:
         - echo "$HUMAN_BUILD_NAME..."
-        - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)"
+        - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)" make check-all-local
+
+    -
+      env: HUMAN_BUILD_NAME="'Run tests in docker'"
+      # Don't use any predefined language env
+      # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
+      language: generic
+      python: none
+      sudo: required
+      services:
+        - docker
+      install:
+        - docker build --pull --file tests/Dockerfile .
+      script:
+        - echo "$HUMAN_BUILD_NAME..."
+        - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)" make test

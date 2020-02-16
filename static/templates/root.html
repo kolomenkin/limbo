@@ -58,8 +58,7 @@
 									</tr>
 								</thead>
 								<tbody id="rows">
-									% index = 0
-									% for file in files:
+									% for index, file in enumerate(files):
 									<tr id="row_{{index}}">
 										<td class="text-center">{{index + 1}}</td>
 										<td id="name"><a href="{{file['url']}}">{{file['display_filename']}}</a></td>
@@ -69,7 +68,6 @@
 											<button type="button" class="btn btn-danger btn-xs" onclick="removeFileRequest( {{index}} , '{{file['url_filename']}}')">&times;</button>
 										</td>
 									</tr>
-									% index = index + 1
 									% end
 								</tbody>
 							</table>
@@ -110,7 +108,7 @@
 
 			<footer class="page-footer font-small blue pt-4 mt-4">
 				<div class="footer-copyright py-3 text-center">
-					© 2018 Copyright: <a href="https://github.com/kolomenkin/limbo">{{h1}}</a> (MIT License)
+					&copy; 2018 Copyright: <a href="https://github.com/kolomenkin/limbo">{{h1}}</a> (MIT License)
 				</div>
 			</footer>
 		</div>

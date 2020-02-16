@@ -1,8 +1,26 @@
-/.cache/
-/.idea/
-__pycache__/
-/.pytest_cache/
-/storage/
-/venv/
+# Build/development environment
+# ============
 /.venv/
 /.venv2/
+/.idea/
+
+# Temporary local files
+# ============
+/.temp/
+/src/.temp/
+
+# Byte-compiled / optimized / DLL files
+# ============
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# cache dirs
+.mypy_cache/
+
+#Macos folder settings file
+.DS_Store
+
+# Local user file storage
+/storage/
