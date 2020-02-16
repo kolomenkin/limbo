@@ -1,15 +1,58 @@
-/.cache/
-/.git/
-/.idea/
-**/__pycache__/
-/.pytest_cache/
+# Local file storage
 /storage/
-/venv/
+
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+/.git/
+
+# Virtual environments
 /.venv/
 /.venv2/
+
+# cache dirs
+src/.mypy_cache
+src/.pytest_cache
+
+__pycache__
+*/__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
+*/*/*/*/__pycache__
+*/*/*/*/*/__pycache__
+*/*/*/*/*/*/__pycache__
+*/*/*/*/*/*/*/__pycache__
+
+*.pyc
+*/*.pyc
+*/*/*.pyc
+*/*/*/*.pyc
+*/*/*/*/*.pyc
+*/*/*/*/*/*.pyc
+*/*/*/*/*/*/*.pyc
+*/*/*/*/*/*/*/*.pyc
+
+# PyCharm-generated dir
+.idea
+
+# runtime generated files
+.temp
+src/.temp
+
+# Optimize docker container size
+# Remove unused files and folders:
+/.dockerignore
+/.editorconfig
+/.gitattributes
+/.gitignore
+
 /CHANGELOG.md
 /CREDITS
 /Dockerfile
 /LICENSE
 /README.md
 /run-server-on-windows.cmd
+
+# Backward compatibility
+# ============
+.mypy_cache
+.pytest_cache
+/.cache/
