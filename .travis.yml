@@ -1,3 +1,4 @@
+---
 dist: xenial  # required for Python >= 3.7
 
 # Use containers instead of full VMs for faster startup.
@@ -8,52 +9,54 @@ language: python
 cache: pip
 
 python:
-    - "3.5"
-    - "3.6"
-    - "3.7"
+  - "3.5"
+  - "3.6"
+  - "3.7"
 
 env: HUMAN_BUILD_NAME="'Run tests'"
 
 install:
-    - pip install -r requirements.txt
-    - pip install -r requirements.dev.txt
+  - pip install -r requirements.txt
+  - pip install -r requirements.dev.txt
 
 script:
-    - make test
+  - make test
 
 
 matrix:
   include:
-  - env: HUMAN_BUILD_NAME="'Build and run main docker image'"
-    # Don't use any predefined language env
-    # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
-    language: python
-    cache: pip
-    python: 3.6
-    sudo: required
-    services:
+    -
+      env: HUMAN_BUILD_NAME="'Build and run main docker image'"
+      # Don't use any predefined language env
+      # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
+      language: python
+      cache: pip
+      python: 3.6
+      sudo: required
+      services:
         - docker
-    install:
+      install:
         - pip install numpy==1.11.3 requests==2.18.4
         - docker build --pull .
-    script:
+      script:
         - echo "$HUMAN_BUILD_NAME..."
         - docker run --rm -d --name limbo_container -p 127.0.0.1:22080:80 "$(docker build --quiet .)"
         - sleep 5
         - make test_server "SERVER=http://127.0.0.1:22080"
         - docker stop limbo_container
 
-  - env: HUMAN_BUILD_NAME="'Run tests in docker'"
-    # Don't use any predefined language env
-    # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
-    language: generic
-    cache: none
-    python: none
-    sudo: required
-    services:
+    -
+      env: HUMAN_BUILD_NAME="'Run tests in docker'"
+      # Don't use any predefined language env
+      # (see https://github.com/travis-ci/travis-ci/issues/4895#issuecomment-150703192)
+      language: generic
+      cache: none
+      python: none
+      sudo: required
+      services:
         - docker
-    install:
+      install:
         - docker build --pull --file tests/Dockerfile .
-    script:
+      script:
         - echo "$HUMAN_BUILD_NAME..."
         - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)"

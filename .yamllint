@@ -1,0 +1,15 @@
+---
+# Manual for `yamllint` config:
+# https://yamllint.readthedocs.io/en/stable/configuration.html
+
+extends: default
+
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+  - '.yamllint'
+
+rules:
+  line-length:
+    max: 120
+    level: warning
