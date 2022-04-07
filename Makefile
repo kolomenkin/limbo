@@ -9,10 +9,8 @@ MYPY_CONFIG=./mypy.ini
 
 help:
 	$(info The following make commands are available:)
-	$(info test              - run tests and check code formatting)
+	$(info test              - run unit tests)
 	@:
-
-.PHONY: test
 
 test:
 	python -m pytest -v
@@ -33,22 +31,22 @@ check-all-local: check-pep8-local check-mypy check-lint-local
 
 check-md:
 # Using two slashes at the beginning of the paths for Windows bash shell
-	docker run --rm --network none -v "${CURDIR}:/markdown:ro" \
-		-w //markdown/ \
+	docker run --rm --tty --network=none --volume="${CURDIR}:/markdown:ro" \
+		--workdir=//markdown/ \
 		06kellyjac/markdownlint-cli:0.21.0-alpine \
 		-- ./
 
 check-yaml:
 # Using two slashes at the beginning of the paths for Windows bash shell
-	docker run --rm --network none -v "$(CURDIR):/data:ro" \
-		-w //data/ \
+	docker run --rm --tty --network=none --volume="$(CURDIR):/data:ro" \
+		--workdir=//data/ \
 		cytopia/yamllint:1.20 \
 		-- ./
 
 check-pep8:
 # Using two slashes at the beginning of the paths for Windows bash shell
-	docker run --rm --network none -v "${CURDIR}:/apps:ro" \
-		-w //apps/ \
+	docker run --rm --tty --network=none --volume="${CURDIR}:/apps:ro" \
+		--workdir=//apps/ \
 		alpine/flake8:3.7.9 \
 		 --config=${FLAKE8_CONFIG} -- ${CODE_DIR_ROOT}
 
@@ -64,8 +62,8 @@ check-lint:
 # =================================================================================================
 # WARNING! DON'T USE THIS TARGET! PYLINT CAN'T WORK CORRECTLY WITHOUT ALL DEPENDENCIES INSTALLED!
 # =================================================================================================
-	docker run --rm --network none -v "${CURDIR}:/data:ro" \
-		-w //data/ \
+	docker run --rm --tty --network=none --volume="${CURDIR}:/data:ro" \
+		--workdir=//data/ \
 		cytopia/pylint@sha256:9437cb377e90b73121a94eb3743b9d0769a2021c7a7e5a6e423957a17f831216 \
 		--rcfile=${PYLINT_CONFIG} -- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
 
@@ -74,7 +72,7 @@ check-lint-local:
 		--rcfile=${PYLINT_CONFIG} -- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
 
 check-mypy:
-	mypy --config-file ${MYPY_CONFIG} --strict -- ${CODE_DIR_ROOT}
+	mypy --config-file=${MYPY_CONFIG} --strict -- ${CODE_DIR_ROOT}
 
 check-make:
 # cytopia/checkmake:latest
@@ -82,8 +80,7 @@ check-make:
 # OS/ARCH: linux/amd64
 # pushed on 2020-02-16
 # Using two slashes at the beginning of the paths for Windows bash shell
-	docker run --rm --network none -v "${CURDIR}:/data:ro" \
-		-w //data/ \
-		--entrypoint=find \
+	docker run --rm --tty --network=none --volume="${CURDIR}:/data:ro" \
+		--workdir=//data/ \
 		cytopia/checkmake@sha256:512ddae39012238b41598ebc1681063112aba1bd6a2eb8be3e74704e01d91581 \
-		./ -type f -name Makefile -exec checkmake {} \;
+		--config=./checkmake.ini Makefile
