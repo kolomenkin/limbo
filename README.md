@@ -15,9 +15,9 @@ All files are automatically deleted 24 hours after upload.
 
 ## Requirements
 
-- Python 3.5 - 3.7
+- Python 3.7 - 3.8
 - Requirements for production: [requirements.txt](requirements.txt)
-- Requirements for development: [requirements.dev.txt](requirements.dev.txt)
+- Additional requirements for development: [requirements.dev.txt](requirements.dev.txt)
 
 ## Configuration
 
@@ -118,3 +118,26 @@ Particular web server versions can be checked in [requirements.dev.txt](requirem
 - flup - starts and do not handle any requests (Windows). All HTTP requests are hanging
 - gevent - can't resolve dependencies in Windows in runtime
 - gunicorn - can't resolve dependencies in Windows in runtime
+
+## Testing the service
+
+1. Copy files from this repo
+1. Install service dependencies
+
+    ```bash
+    python -m pip install -r requirements.txt
+    python -m pip install -r requirements.dev.txt
+    ```
+
+1. Check syntax:
+
+    ```bash
+    make check-all-docker
+    make check-all
+    ```
+
+1. Run unit tests locally:
+
+    ```bash
+    make test
+    ```
