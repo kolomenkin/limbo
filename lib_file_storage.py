@@ -1,5 +1,5 @@
 # Limbo file sharing (https://github.com/kolomenkin/limbo)
-# Copyright 2018 Sergey Kolomenkin
+# Copyright 2018-2022 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 #
 import io
@@ -8,11 +8,12 @@ import os
 import re
 import threading
 from dataclasses import dataclass
-from time import time, sleep
-from typing import List, Any, Optional, Sequence
+from time import sleep, time
+from typing import Any, List, Optional, Sequence
 from uuid import uuid4
 
 from lib_common import get_file_modified_unixtime
+
 
 LOGGER = logging.getLogger('dat')
 

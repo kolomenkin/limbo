@@ -11,7 +11,7 @@ from numpy import random
 # import os, sys
 # script_dir = os.path.dirname(os.path.abspath(__file__))
 # sys.path.insert(0, script_dir + '/../')
-from lib_file_storage import FileStorage, StorageFileItem, DisplayFileItem
+from lib_file_storage import DisplayFileItem, FileStorage, StorageFileItem
 
 
 def get_random_bytes(size: int, seed: int) -> bytes:

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Limbo file sharing (https://github.com/kolomenkin/limbo)
-# Copyright 2018 Sergey Kolomenkin
+# Copyright 2018-2022 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 #
 import json
@@ -10,7 +10,7 @@ import os
 import sys
 import urllib
 from time import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from streaming_form_data import StreamingFormDataParser
 from streaming_form_data.targets import BaseTarget, NullTarget
@@ -19,7 +19,8 @@ import bottle
 import config
 from lib_bottle import bottle_get, bottle_post, bottle_route, bottle_view, RouteResponse
 from lib_common import get_file_modified_unixtime
-from lib_file_storage import FileStorage, StorageFileItem, AtomicFile
+from lib_file_storage import AtomicFile, FileStorage, StorageFileItem
+
 
 ViewResponse = Dict[str, Any]
 MethodResponse = str
@@ -49,12 +50,12 @@ def format_size(size: int) -> str:
     if size < 10 * kib:
         return f'{size} B'
     if size < 10 * mib:
-        return f'{size/kib:.1f} KiB'
+        return f'{size / kib:.1f} KiB'
     if size < 10 * gib:
-        return f'{size/mib:.1f} MiB'
+        return f'{size / mib:.1f} MiB'
     if size < 10 * tib:
-        return f'{size/gib:.1f} GiB'
-    return f'{size/tib:.1f} TiB'
+        return f'{size / gib:.1f} GiB'
+    return f'{size / tib:.1f} TiB'
 
 
 def format_age(seconds: int) -> str:
@@ -257,8 +258,7 @@ def server_storage(url_filename: str) -> RouteResponse:
             root=info.storage_directory,
             mimetype=mimetype,
         )
-        content_disposition = 'inline; filename="%s"' % \
-            quoted_display_filename
+        content_disposition = 'inline; filename="%s"' % quoted_display_filename
         response.set_header('Content-Disposition', content_disposition)
     else:
         response = bottle.static_file(
@@ -284,19 +284,20 @@ def main() -> None:
 
     # treat more file extensions as text files
     # (so preview in browser will be available)
-    for ext in {
-            'cfg',
-            'cmake',
-            'cmd',
-            'conf',
-            'ini',
-            'json',
-            'log',
-            'man',
-            'md',
-            'php',
-            'sh',
-    }:
+    text_extenstions = {
+        'cfg',
+        'cmake',
+        'cmd',
+        'conf',
+        'ini',
+        'json',
+        'log',
+        'man',
+        'md',
+        'php',
+        'sh',
+    }
+    for ext in text_extenstions:
         mimetypes.add_type(f'text/{ext}', f'.{ext}')
 
     STORAGE.start()

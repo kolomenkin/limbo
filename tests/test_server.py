@@ -6,7 +6,7 @@ from subprocess import Popen
 from sys import argv as sys_argv
 from tempfile import TemporaryDirectory
 from time import strftime
-from typing import Optional, List, Sequence, Any
+from typing import Any, List, Optional, Sequence
 from unittest import TestCase
 from urllib.parse import urlparse
 
@@ -14,7 +14,8 @@ import requests
 from dataclasses_json import dataclass_json, Undefined  # type: ignore
 from requests import Response
 
-from utils.testing_helpers import wait_net_service, get_random_text, get_random_bytes
+from utils.testing_helpers import get_random_bytes, get_random_text, wait_net_service
+
 
 DEFAULT_LISTEN_HOST = '127.0.0.1'
 DEFAULT_LISTEN_PORT = 35080
@@ -84,7 +85,7 @@ class ServerTestCase(TestCase):
         log('Request: GET ' + url)
         response = requests.get(url)
         self.check_response(response)
-        files: List[FileOnServer] =\
+        files: List[FileOnServer] = \
             FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member
         files = sorted(files, key=lambda item: item.display_filename)
         return files
@@ -113,8 +114,8 @@ class ServerTestCase(TestCase):
         boundary = b'Ab522e64be24449aa3131245da23b3yZ'
         encoded_filename = original_filename.encode('utf-8')
         payload = b'--' + boundary + b'\r\nContent-Disposition: form-data' \
-            + b'; name="file"; filename="' + encoded_filename \
-            + b'"\r\n\r\n' + filedata + b'\r\n--' + boundary + b'--\r\n'
+                  + b'; name="file"; filename="' + encoded_filename \
+                  + b'"\r\n\r\n' + filedata + b'\r\n--' + boundary + b'--\r\n'
 
         content_type = 'multipart/form-data; boundary=' + boundary.decode('utf-8')
         headers = {'Content-Type': content_type}

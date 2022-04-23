@@ -1,6 +1,6 @@
 import socket
-from time import strftime, sleep, time
-from typing import Any, Optional, List
+from time import sleep, strftime, time
+from typing import Any, List, Optional
 
 from numpy import random
 
@@ -19,14 +19,14 @@ def get_random_bytes(size: int, seed: int) -> bytes:
 def get_random_text(size: int, seed: int) -> str:
     random.seed(seed)
     items: List[str] = []
-    for char in range(ord('A'), ord('Z')+1):
+    for char in range(ord('A'), ord('Z') + 1):
         items += chr(char)
-    for char in range(ord('a'), ord('z')+1):
+    for char in range(ord('a'), ord('z') + 1):
         items += chr(char)
-    for char in range(ord('0'), ord('9')+1):
+    for char in range(ord('0'), ord('9') + 1):
         items += chr(char)
-    items.extend(('.', ',', ';', ':', '!', ))
-    items.extend((' ', ' ', ' ', ' ', ))
+    items.extend(('.', ',', ';', ':', '!',))
+    items.extend((' ', ' ', ' ', ' ',))
     items += '\n'
     return ''.join(random.choice(items, size))
 

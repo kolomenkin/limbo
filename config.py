@@ -1,5 +1,5 @@
 # Limbo file sharing (https://github.com/kolomenkin/limbo)
-# Copyright 2018 Sergey Kolomenkin
+# Copyright 2018-2022 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 #
 import os
@@ -25,7 +25,7 @@ STORAGE_DIRECTORY = read_env('LIMBO_STORAGE_DIRECTORY', './storage')
 # NOTE: value requires ending '/' character
 STORAGE_WEB_URL_BASE = read_env('LIMBO_STORAGE_WEB_URL_BASE', '')
 
-MAX_STORAGE_SECONDS = int(read_env('LIMBO_MAX_STORAGE_SECONDS', str(24*3600)))
+MAX_STORAGE_SECONDS = int(read_env('LIMBO_MAX_STORAGE_SECONDS', str(24 * 3600)))
 
 IS_DEBUG = bool(int(read_env('LIMBO_IS_DEBUG', '0')))
 
