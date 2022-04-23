@@ -9,28 +9,51 @@ root = true
 insert_final_newline = true
 charset = utf-8
 
-[Makefile]
+[{Makefile, Makefile.*, *.mk}]
 indent_style = tab
+indent_size = 4
 
-[*.py]
+[{*.py, *.pyi}]
 indent_style = space
 indent_size = 4
 max_line_length = 120
+# PyCharm: With ij_continuation_indent_size python formatting adds additional indentation for function arguments.
+# So they are not aligned at the same level as function code.
+ij_continuation_indent_size = 8
+ij_python_blank_lines_after_local_imports = 1
+ij_python_blank_lines_after_imports = 2
+ij_python_from_import_new_line_after_left_parenthesis = true
+ij_python_from_import_new_line_before_right_parenthesis = true
+ij_python_from_import_parentheses_force_if_multiline = true
+ij_python_from_import_trailing_comma_if_multiline = true
+ij_python_optimize_imports_case_insensitive_order = true
+ij_python_optimize_imports_sort_names_in_from_imports = true
+ij_python_use_continuation_indent_for_arguments = false
+ij_python_use_continuation_indent_for_collection_and_comprehensions = false
 
-[{*.yml,*.yaml}]
+[{*.yml, *.yaml}]
 indent_style = space
 indent_size = 2
 max_line_length = 120
+ij_yaml_spaces_within_brackets = true
+ij_yaml_block_mapping_on_new_line = true
 
 [*.sh]
+indent_style = space
+# Note: indent_size is not applied for Bash scripts in PyCharm for some reason. Pycharm is using indentation size 2.
+indent_size = 2
 end_of_line = lf
 
 [*.md]
-max_line_length = 100
+indent_style = space
+indent_size = 4
+max_line_length = 140
 
 [*.html]
 indent_style = tab
 indent_size = 4
+max_line_length = 200
+ij_html_do_not_indent_children_of_tags =
 
 [*.css]
 indent_style = tab
