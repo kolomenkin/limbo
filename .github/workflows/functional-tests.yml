@@ -1,0 +1,54 @@
+---
+name: "Functional tests"
+
+on: # yamllint disable-line rule:truthy
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+
+  run-functional-tests:
+    name: Functional tests
+    strategy:
+      matrix:
+        python_version: [ "3.7", "3.8" ]
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python_version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.func.txt
+      -
+        name: Install dependencies (pip)
+        shell: sh
+        run: |
+          python -m pip install --upgrade -- pip
+          pip install \
+            --requirement=requirements.func.txt
+      -
+        name: Set up Docker build
+        uses: ./.github/actions/docker-setup/
+      -
+        name: Build Docker image (my_prod:latest)
+        uses: ./.github/actions/docker-build/
+        with:
+          image: my_prod:latest
+          dockerfile: ./Dockerfile
+          context: .
+          cache-key: prod
+      -
+        name: Run functional tests
+        shell: sh
+        run: |
+          docker run --rm --detach --name=limbo_container --publish=127.0.0.1:22080:80 my_prod:latest
+          # SLEEP ??????????????????????????????????????????????????????? wait for it
+          make -- test_server "SERVER=http://127.0.0.1:22080"
+          docker stop -- limbo_container

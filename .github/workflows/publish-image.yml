@@ -1,0 +1,48 @@
+---
+name: "Publish Docker image"
+
+on: # yamllint disable-line rule:truthy
+  workflow_call:
+    secrets:
+      username:
+        required: true
+      password:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    name: Build and publish Docker image
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.username }}
+          password: ${{ secrets.password }}
+      -
+        name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: kolomenkin/limbo
+      -
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker build
+        uses: ./.github/actions/docker-setup/
+      -
+        name: Build and publish Docker image
+        uses: ./.github/actions/docker-build/
+        with:
+          image: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          load: false
+          dockerfile: ./Dockerfile
+          context: .
+          cache-key: prod

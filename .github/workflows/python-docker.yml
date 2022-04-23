@@ -1,0 +1,120 @@
+---
+name: "Check and test code (docker)"
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches: [ master, dev, release/** ]
+  pull_request:
+    branches: [ "**" ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  check-code-style:
+    name: Check code style
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        name: Check Markdown syntax (docker)
+        shell: sh
+        run: |
+          make -- check-md
+      -
+        name: Check YAML syntax (docker)
+        shell: sh
+        run: |
+          make -- check-yaml
+      -
+        name: Check Makefile syntax (docker)
+        shell: sh
+        run: |
+          make -- check-make
+      -
+        name: Check Python syntax (PEP8) (docker)
+        shell: sh
+        run: |
+          make -- check-pep8
+
+  run-code-analysis:
+    name: Run code analysis
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker build
+        uses: ./.github/actions/docker-setup/
+      -
+        name: Build Docker image (my_test:latest)
+        uses: ./.github/actions/docker-build/
+        with:
+          image: my_test:latest
+          dockerfile: ./tests/Dockerfile
+          context: .
+          cache-key: tests
+      -
+        name: Run flake8
+        uses: addnab/docker-run-action@v3
+        with:
+          image: my_test:latest
+          options: --tty
+          docker_network: none
+          run: make -- check-pep8-local
+      -
+        name: Run mypy
+        uses: addnab/docker-run-action@v3
+        with:
+          image: my_test:latest
+          options: --tty
+          docker_network: none
+          run: make -- check-mypy
+      -
+        name: Run pylint
+        uses: addnab/docker-run-action@v3
+        with:
+          image: my_test:latest
+          options: --tty
+          docker_network: none
+          run: make -- check-lint-local
+
+  run-unit-tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker build
+        uses: ./.github/actions/docker-setup/
+      -
+        name: Build Docker image (my_test:latest)
+        uses: ./.github/actions/docker-build/
+        with:
+          image: my_test:latest
+          dockerfile: ./tests/Dockerfile
+          context: .
+          cache-key: tests
+      -
+        name: Run unit tests
+        uses: addnab/docker-run-action@v3
+        with:
+          image: my_test:latest
+          options: --tty
+          docker_network: none
+          run: make -- test
+
+  functional-tests:
+    name: Run functional tests
+    uses: ./.github/workflows/functional-tests.yml
+
+  publish-image:
+    name: Build and publish Docker image
+    needs: [ check-code-style, run-code-analysis, run-unit-tests, functional-tests ]
+    uses: ./.github/workflows/publish-image.yml
+    secrets:
+      username: ${{ secrets.DOCKER_USERNAME }}
+      password: ${{ secrets.DOCKER_PASSWORD }}

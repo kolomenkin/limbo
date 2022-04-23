@@ -1,0 +1,3 @@
+numpy==1.16.0
+requests==2.20.0
+dataclasses-json==0.3.8
