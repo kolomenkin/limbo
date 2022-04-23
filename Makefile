@@ -1,9 +1,15 @@
 # =================================
-CODE_DIR_ROOT=./
+CODE_DIR_ROOT = ./
 
-FLAKE8_CONFIG=./.flake8
-PYLINT_CONFIG=./.pylintrc
-MYPY_CONFIG=./mypy.ini
+FLAKE8_CONFIG       = ./.config/.flake8
+PYLINT_CONFIG       = ./.config/.pylintrc
+MYPY_CONFIG         = ./.config/mypy.ini
+
+MARKDOWNLINT_CONFIG = ./.config/.markdownlint.yaml
+YAMLLINT_CONFIG     = ./.config/.yamllint.yaml
+CHECKMAKE_CONFIG    = ./.config/checkmake.ini
+
+PYTEST_CONFIG       = ./pytest.ini
 
 # =================================
 
@@ -13,7 +19,7 @@ help:
 	@:
 
 test:
-	python -m pytest -v
+	pytest --verbose --strict-config -c=${PYTEST_CONFIG}
 
 test_server:
 	PYTHONPATH=. python ./tests/test_server.py ${SERVER}
@@ -34,21 +40,25 @@ check-md:
 	docker run --rm --tty --network=none --volume="${CURDIR}:/markdown:ro" \
 		--workdir=//markdown/ \
 		06kellyjac/markdownlint-cli:0.21.0-alpine \
-		-- ./
+            --config=${MARKDOWNLINT_CONFIG} \
+			-- ./
 
 check-yaml:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="$(CURDIR):/data:ro" \
 		--workdir=//data/ \
 		cytopia/yamllint:1.20 \
-		-- ./
+            -c=${YAMLLINT_CONFIG} \
+			--strict \
+			-- ./
 
 check-pep8:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="${CURDIR}:/apps:ro" \
 		--workdir=//apps/ \
 		alpine/flake8:3.7.9 \
-		 --config=${FLAKE8_CONFIG} -- ${CODE_DIR_ROOT}
+			--config=${FLAKE8_CONFIG} \
+			-- ${CODE_DIR_ROOT}
 
 check-pep8-local:
 	flake8 --config=${FLAKE8_CONFIG} -- ./
@@ -65,11 +75,13 @@ check-lint:
 	docker run --rm --tty --network=none --volume="${CURDIR}:/data:ro" \
 		--workdir=//data/ \
 		cytopia/pylint@sha256:9437cb377e90b73121a94eb3743b9d0769a2021c7a7e5a6e423957a17f831216 \
-		--rcfile=${PYLINT_CONFIG} -- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
+			--rcfile=${PYLINT_CONFIG} \
+			-- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
 
 check-lint-local:
 	pylint \
-		--rcfile=${PYLINT_CONFIG} -- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
+		--rcfile=${PYLINT_CONFIG} \
+		-- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
 
 check-mypy:
 	mypy --config-file=${MYPY_CONFIG} --strict -- ${CODE_DIR_ROOT}
@@ -83,4 +95,5 @@ check-make:
 	docker run --rm --tty --network=none --volume="${CURDIR}:/data:ro" \
 		--workdir=//data/ \
 		cytopia/checkmake@sha256:512ddae39012238b41598ebc1681063112aba1bd6a2eb8be3e74704e01d91581 \
-		--config=./checkmake.ini Makefile
+			--config=${CHECKMAKE_CONFIG} \
+			Makefile
