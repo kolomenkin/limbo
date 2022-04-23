@@ -1,22 +1,29 @@
 FROM python:3.7.6-alpine
 
 RUN set -ex \
-    && apk add --no-cache \
+    && apk add --no-cache make \
+    && apk add --no-cache --virtual=.build-essential \
         gcc \
-        libffi-dev \
-        make \
-        musl-dev \
-        openssl-dev
+        musl-dev
 
 COPY \
     ./requirements.txt \
+    /opt/limbo_dependencies/
+
+RUN set -ex \
+    && pip install \
+        -r /opt/limbo_dependencies/requirements.txt
+
+COPY \
     ./requirements.dev.txt \
     /opt/limbo_dependencies/
 
 RUN set -ex \
     && pip install \
-        -r /opt/limbo_dependencies/requirements.txt \
-        -r /opt/limbo_dependencies/requirements.dev.txt \
+        -r /opt/limbo_dependencies/requirements.dev.txt
+
+RUN set -ex \
+    && apk del .build-essential \
     && mkdir -p -m 777 /tmp/storage
 
 ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage

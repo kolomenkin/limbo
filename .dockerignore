@@ -9,9 +9,6 @@
 /.venv2/
 
 # cache dirs
-src/.mypy_cache
-src/.pytest_cache
-
 __pycache__
 */__pycache__
 */*/__pycache__
@@ -31,11 +28,14 @@ __pycache__
 */*/*/*/*/*/*/*.pyc
 
 # PyCharm-generated dir
-.idea
+/.idea/
 
 # runtime generated files
-.temp
-src/.temp
+/.temp/
+
+# CI files:
+/.github/
+/.travis.yml
 
 # Optimize docker container size
 # Remove unused files and folders:

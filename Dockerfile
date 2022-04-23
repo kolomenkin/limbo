@@ -5,18 +5,12 @@ COPY \
     /opt/limbo_dependencies/
 
 RUN set -ex \
-    && apk add --no-cache \
+    && apk add --no-cache --virtual=.build-essential \
         gcc \
-        libffi-dev \
         musl-dev \
-        openssl-dev \
     && pip install \
         -r /opt/limbo_dependencies/requirements.txt \
-    && apk del \
-        gcc \
-        libffi-dev \
-        musl-dev \
-        openssl-dev \
+    && apk del .build-essential \
     && mkdir -p -m 777 /tmp/storage
 
 ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage \
