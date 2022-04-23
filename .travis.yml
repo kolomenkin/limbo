@@ -39,10 +39,10 @@ matrix:
         - docker build --pull .
       script:
         - echo "$HUMAN_BUILD_NAME..."
-        - docker run --rm -d --name limbo_container -p 127.0.0.1:22080:80 "$(docker build --quiet .)"
+        - docker run --rm -d --name=limbo_container --publish=127.0.0.1:22080:80 "$(docker build --quiet .)"
         - sleep 5
         - make test_server "SERVER=http://127.0.0.1:22080"
-        - docker stop limbo_container
+        - docker stop -- limbo_container
 
     -
       env: HUMAN_BUILD_NAME="'Run checks in different docker containers'"
@@ -56,7 +56,7 @@ matrix:
       install: skip
       script:
         - echo "$HUMAN_BUILD_NAME..."
-        - make check-all-docker
+        - make -- check-all-docker
 
     -
       env: HUMAN_BUILD_NAME="'Run checks in single docker container'"
@@ -71,7 +71,9 @@ matrix:
         - docker build --pull --file tests/Dockerfile .
       script:
         - echo "$HUMAN_BUILD_NAME..."
-        - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)" make check-all-local
+        - |
+          docker run --rm --tty --network=none "$(docker build --file=tests/Dockerfile --quiet .)" \
+            make -- check-all-local
 
     -
       env: HUMAN_BUILD_NAME="'Run tests in docker'"
@@ -86,4 +88,4 @@ matrix:
         - docker build --pull --file tests/Dockerfile .
       script:
         - echo "$HUMAN_BUILD_NAME..."
-        - docker run --rm -it "$(docker build --file tests/Dockerfile --quiet .)" make test
+        - docker run --rm -it "$(docker build --file=tests/Dockerfile --quiet .)" make test

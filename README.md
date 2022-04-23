@@ -1,9 +1,24 @@
 # Limbo: the file sharing lightweight service
 
+[![GitHub license](https://img.shields.io/github/license/kolomenkin/limbo)](LICENSE)
+[![GitHub latest tag](
+https://img.shields.io/github/v/tag/kolomenkin/limbo?sort=semver)](
+https://github.com/kolomenkin/limbo/releases)
+[![GitHub code size in bytes](
+https://img.shields.io/github/languages/code-size/kolomenkin/limbo)](
+https://github.com/kolomenkin/limbo/archive/refs/heads/master.zip)
+[![Docker Image Size (tag)](
+https://img.shields.io/docker/image-size/kolomenkin/limbo/master)](
+https://hub.docker.com/r/kolomenkin/limbo/tags?page=1&name=master)  
 [![Master branch travis build status](
 https://travis-ci.org/kolomenkin/limbo.svg?branch=master)](
 https://travis-ci.org/kolomenkin/limbo)
-[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![GitHub branch checks state](
+https://img.shields.io/github/checks-status/kolomenkin/limbo/master)](
+https://github.com/kolomenkin/limbo/commits/master)
+[![Libraries.io dependency status for GitHub repo](
+https://img.shields.io/librariesio/github/kolomenkin/limbo)](
+https://libraries.io/github/kolomenkin/limbo)
 
 This project implements lightweight web page with easy possibility
 to upload, download, list, remove files.  
@@ -60,7 +75,7 @@ overloaded using environment variables.
 1. Install service dependencies
 
     ```bash
-    python -m pip install -r requirements.txt
+    pip install -r requirements.txt
     ```
 
 1. Run the service:
@@ -91,7 +106,7 @@ docker run --rm -it -p 127.0.0.1:8080:80 -v ~/limbo_storage:/tmp/storage $(docke
 Run Limbo self-tests in docker:
 
 ```bash
-docker run --rm -it $(docker build --file tests/Dockerfile --quiet .)
+docker run --rm -it $(docker build --file=tests/Dockerfile --quiet .)
 ```
 
 ### Run in Windows
@@ -125,15 +140,15 @@ Particular web server versions can be checked in [requirements.dev.txt](requirem
 1. Install service dependencies
 
     ```bash
-    python -m pip install -r requirements.txt
-    python -m pip install -r requirements.dev.txt
+    pip install -r requirements.txt
+    pip install -r requirements.dev.txt
     ```
 
 1. Check syntax:
 
     ```bash
-    make check-all-docker
-    make check-all
+    make -- check-all-docker
+    make -- check-all
     ```
 
 1. Run unit tests locally:
@@ -141,3 +156,10 @@ Particular web server versions can be checked in [requirements.dev.txt](requirem
     ```bash
     make test
     ```
+
+### Running tests in Docker
+
+```bash
+docker build --pull --file=./tests/Dockerfile -- .
+docker run --rm --tty --network=none "$(docker build --file=./tests/Dockerfile --quiet -- .)" make test
+```
