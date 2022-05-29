@@ -107,6 +107,32 @@ jobs:
           docker_network: none
           run: make -- test
 
+  run-speed-test:
+    name: Run speed test
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker build
+        uses: ./.github/actions/docker-setup/
+      -
+        name: Build Docker image (my_test:latest)
+        uses: ./.github/actions/docker-build/
+        with:
+          image: my_test:latest
+          dockerfile: ./tests/Dockerfile
+          context: .
+          cache-key: tests
+      -
+        name: Run speed test
+        uses: addnab/docker-run-action@v3
+        with:
+          image: my_test:latest
+          options: --tty
+          docker_network: none
+          run: make -- speedtest
+
   functional-tests:
     name: Run functional tests
     uses: ./.github/workflows/functional-tests.yml
