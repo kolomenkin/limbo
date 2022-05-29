@@ -1,4 +1,8 @@
-bottle==0.12.17
-streaming_form_data==1.4.0
+bottle==0.12.19
+# Bottle 0.12.19 does not support cherrypy>=9
+# https://github.com/bottlepy/bottle/blob/eb1982ea22937a042f5a6e98c5709f779a8fd66c/bottle.py#L3295
 cherrypy==8.9.1
-six==1.12.0      # required by cherrypy
+streaming_form_data==1.10.2
+
+# Indirect dependencies:
+six==1.16.0      # required by cherrypy

@@ -39,7 +39,7 @@ check-md:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="${CURDIR}:/markdown:ro" \
 		--workdir=//markdown/ \
-		06kellyjac/markdownlint-cli:0.21.0-alpine \
+		06kellyjac/markdownlint-cli:0.27.1-alpine \
             --config=${MARKDOWNLINT_CONFIG} \
 			-- ./
 
@@ -47,7 +47,7 @@ check-yaml:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="$(CURDIR):/data:ro" \
 		--workdir=//data/ \
-		cytopia/yamllint:1.20 \
+		cytopia/yamllint:1.26-0.9 \
             -c=${YAMLLINT_CONFIG} \
 			--strict \
 			-- ./
@@ -56,7 +56,7 @@ check-pep8:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="${CURDIR}:/apps:ro" \
 		--workdir=//apps/ \
-		alpine/flake8:3.7.9 \
+		alpine/flake8:4.0.1 \
 			--config=${FLAKE8_CONFIG} \
 			-- ${CODE_DIR_ROOT}
 
@@ -79,6 +79,6 @@ check-make:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="${CURDIR}:/data:ro" \
 		--workdir=//data/ \
-		cytopia/checkmake@sha256:512ddae39012238b41598ebc1681063112aba1bd6a2eb8be3e74704e01d91581 \
+		cytopia/checkmake:0.1.0-release-0.2 \
 			--config=${CHECKMAKE_CONFIG} \
 			Makefile

@@ -20,7 +20,6 @@ python --version
 
 REM install dependencies
 python -m pip install -r requirements.txt
-python -m pip install cherrypy==8.9.1
 
 python server.py
 
