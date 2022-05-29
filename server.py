@@ -64,7 +64,7 @@ def format_age(seconds: int) -> str:
     minutes = seconds // 60
     if minutes < 60:
         return f'{minutes}m'
-    return '{minutes // 60}h {minutes % 60}m'
+    return f'{minutes // 60}h {minutes % 60}m'
 
 
 @bottle_route('/')
