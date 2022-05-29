@@ -3,7 +3,7 @@ name: "Check and test code (docker)"
 
 on: # yamllint disable-line rule:truthy
   push:
-    branches: [ master, dev, release/** ]
+    branches: [ master, develop, dev, release/** ]
   pull_request:
     branches: [ "**" ]
 
