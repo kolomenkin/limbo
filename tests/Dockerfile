@@ -26,7 +26,8 @@ RUN set -ex \
     && apk del .build-essential \
     && mkdir -p -m 777 /tmp/storage
 
-ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage
+ENV PYTHONUNBUFFERED=1 \
+    LIMBO_STORAGE_DIRECTORY=/tmp/storage
 
 WORKDIR /opt/limbo
 

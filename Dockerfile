@@ -13,7 +13,8 @@ RUN set -ex \
     && apk del .build-essential \
     && mkdir -p -m 777 /tmp/storage
 
-ENV LIMBO_STORAGE_DIRECTORY=/tmp/storage \
+ENV PYTHONUNBUFFERED=1 \
+    LIMBO_STORAGE_DIRECTORY=/tmp/storage \
     LIMBO_WEB_SERVER=cherrypy \
     LIMBO_LISTEN_HOST=0.0.0.0 \
     LIMBO_LISTEN_PORT=80

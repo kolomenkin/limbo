@@ -106,4 +106,4 @@ jobs:
         name: Run unit tests (pytest)
         shell: sh
         run: |
-          make -- test
+          PYTHONUNBUFFERED=1 make -- test
