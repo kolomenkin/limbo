@@ -74,7 +74,7 @@ jobs:
         name: Run pylint
         shell: sh
         run: |
-          make -- check-lint-local
+          make -- check-lint
 
   run-unit-tests:
     name: Run unit tests

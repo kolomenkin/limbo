@@ -79,7 +79,7 @@ jobs:
           image: my_test:latest
           options: --tty
           docker_network: none
-          run: make -- check-lint-local
+          run: make -- check-lint
 
   run-unit-tests:
     name: Run unit tests

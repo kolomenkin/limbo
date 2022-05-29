@@ -31,7 +31,7 @@ speedtest:
 
 check-all-docker: check-md check-yaml check-make check-pep8
 
-check-all-local: check-pep8-local check-mypy check-lint-local
+check-all-local: check-pep8-local check-mypy check-lint
 
 # =================================
 
@@ -64,21 +64,6 @@ check-pep8-local:
 	flake8 --config=${FLAKE8_CONFIG} -- ./
 
 check-lint:
-# cytopia/pylint:latest
-# DIGEST: sha256:9437cb377e90b73121a94eb3743b9d0769a2021c7a7e5a6e423957a17f831216
-# OS/ARCH: linux/amd64
-# pushed on 2020-02-15
-# Using two slashes at the beginning of the paths for Windows bash shell
-# =================================================================================================
-# WARNING! DON'T USE THIS TARGET! PYLINT CAN'T WORK CORRECTLY WITHOUT ALL DEPENDENCIES INSTALLED!
-# =================================================================================================
-	docker run --rm --tty --network=none --volume="${CURDIR}:/data:ro" \
-		--workdir=//data/ \
-		cytopia/pylint@sha256:9437cb377e90b73121a94eb3743b9d0769a2021c7a7e5a6e423957a17f831216 \
-			--rcfile=${PYLINT_CONFIG} \
-			-- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
-
-check-lint-local:
 	pylint \
 		--rcfile=${PYLINT_CONFIG} \
 		-- ${CODE_DIR_ROOT}*.py ${CODE_DIR_ROOT}utils/*.py ${CODE_DIR_ROOT}tests/*.py
