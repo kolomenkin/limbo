@@ -49,6 +49,19 @@ jobs:
         shell: sh
         run: |
           docker run --rm --detach --name=limbo_container --publish=127.0.0.1:22080:80 my_prod:latest
-          # SLEEP ??????????????????????????????????????????????????????? wait for it
-          make -- test_server "SERVER=http://127.0.0.1:22080"
+
+          container_ip="$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" limbo_container)"
+          docker run --rm kolomenkin/wait-for-it:latest "$container_ip:80" --timeout=5
+
+          PYTHONUNBUFFERED=1 make -- test_server "SERVER=http://127.0.0.1:22080" ||
+          {
+            echo "==================================="
+            echo "Cleanup on failure..."
+            docker logs --timestamps -- limbo_container || true
+            docker stop -- limbo_container || true
+            exit 1
+          }
+          echo "==================================="
+          echo "Cleanup..."
+          docker logs --timestamps -- limbo_container
           docker stop -- limbo_container

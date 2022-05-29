@@ -40,8 +40,9 @@ matrix:
       script:
         - echo "$HUMAN_BUILD_NAME..."
         - docker run --rm -d --name=limbo_container --publish=127.0.0.1:22080:80 "$(docker build --quiet .)"
-        - sleep 5
-        - make test_server "SERVER=http://127.0.0.1:22080"
+        - container_ip="$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" limbo_container)"
+        - docker run --rm kolomenkin/wait-for-it:latest "$container_ip:80" --timeout=5
+        - make -- test_server "SERVER=http://127.0.0.1:22080"
         - docker stop -- limbo_container
 
     -
