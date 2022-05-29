@@ -23,4 +23,8 @@
 # Files that will always have LF line endings on checkout.
 # Useful for linux docker container mount on windows
 # ============
-*.sh text eol=lf
+*.sh        text eol=lf
+
+# yamllint required LF line endings:
+*.yml       text eol=lf
+*.yaml      text eol=lf

@@ -35,6 +35,7 @@ ij_python_use_continuation_indent_for_collection_and_comprehensions = false
 indent_style = space
 indent_size = 2
 max_line_length = 120
+end_of_line = lf
 ij_yaml_spaces_within_brackets = true
 ij_yaml_block_mapping_on_new_line = true
 
