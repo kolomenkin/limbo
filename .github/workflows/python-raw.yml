@@ -3,9 +3,7 @@ name: "Python version matrix"
 
 on: # yamllint disable-line rule:truthy
   push:
-    branches: [ master, develop, dev, release/** ]
   pull_request:
-    branches: [ "**" ]
 
 permissions:
   contents: read
