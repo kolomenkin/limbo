@@ -1,12 +1,15 @@
+import os
 import socket
-from time import sleep, strftime, time
-from typing import Any, List, Optional
+import time
+from datetime import datetime
+from typing import Any, List
 
 from numpy import random
 
 
 def log(*args: Any) -> None:
-    print(strftime('%Y-%m-%d %H:%M:%S     - hlp - INFO -'), *args)
+    # %(asctime)s000 - %(process)5d - %(name)s - %(levelname)s - %(message)s
+    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'), f'- {os.getpid(): >5} - hlp - INFO -', *args)
 
 
 def get_random_bytes(size: int, seed: int) -> bytes:
@@ -31,27 +34,29 @@ def get_random_text(size: int, seed: int) -> str:
     return ''.join(random.choice(items, size))
 
 
-# http://code.activestate.com/recipes/576655-wait-for-network-service-to-appear/
-def wait_net_service(host: str, port: int, timeout: Optional[int] = None) -> bool:
-    log(f'Waiting for web server: {host}:{port}')
+# https://gist.github.com/butla/2d9a4c0f35ea47b7452156c96a4e7b12
+def wait_net_service(host: str, port: int, timeout: int) -> bool:
+    """Wait until a port starts accepting TCP connections.
+    Args:
+        port (int): Port number.
+        host (str): Host address on which the port should exist.
+        timeout (int): In seconds. How long to wait before raising errors.
+    """
+    log(f'Waiting for TCP server: {host}:{port} (timeout: {timeout} seconds)')
 
-    sock = socket.socket()
-    end = time() + timeout if timeout else 0
-
+    start_time = time.perf_counter()
     while True:
         try:
-            if timeout:
-                if time() > end:
-                    log('ERROR! Network sockets connect waiting timeout!')
-                    return False
+            remaining = timeout - (time.perf_counter() - start_time)
+            if remaining <= 0:
+                log('ERROR! TCP connection timeout!')
+                return False
 
-            sock.connect((host, port))
+            with socket.create_connection((host, port), timeout=remaining) as sock:
+                log('TCP connection succeeded')
+                sock.close()
+                return True
 
-        except socket.timeout:
-            sleep(0.1)
-        except socket.error:
-            sleep(0.1)
-
-        else:
-            sock.close()
-            return True
+        except OSError as ex:
+            log(f'TCP connection failed: {ex!r}')
+            time.sleep(0.1)

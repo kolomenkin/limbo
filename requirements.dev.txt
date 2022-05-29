@@ -1,6 +1,6 @@
 # testing helpers
 # ======================
-dataclasses-json==0.3.8
+dataclasses-json==0.5.7
 flake8==3.7.9
 mypy==0.761
 numpy==1.16.0

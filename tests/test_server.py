@@ -1,17 +1,16 @@
 import os
+import subprocess
 import sys
 from base64 import b64decode
 from dataclasses import dataclass
-from subprocess import Popen
-from sys import argv as sys_argv
+from datetime import datetime
 from tempfile import TemporaryDirectory
-from time import strftime
 from typing import Any, List, Optional, Sequence
 from unittest import TestCase
 from urllib.parse import urlparse
 
 import requests
-from dataclasses_json import dataclass_json, Undefined  # type: ignore
+from dataclasses_json import dataclass_json, Undefined
 from requests import Response
 
 from utils.testing_helpers import get_random_bytes, get_random_text, wait_net_service
@@ -22,13 +21,14 @@ DEFAULT_LISTEN_PORT = 35080
 
 
 def log(*args: Any) -> None:
-    print(strftime('%Y-%m-%d %H:%M:%S     - tst - INFO -'), *args)
+    # %(asctime)s000 - %(process)5d - %(name)s - %(levelname)s - %(message)s
+    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'), f'- {os.getpid(): >5} - tst - INFO -', *args)
 
 
 @dataclass
 class RunningServer:
     temp_directory: 'TemporaryDirectory[str]'
-    process: 'Popen[bytes]'
+    process: 'subprocess.Popen[bytes]'
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -63,13 +63,36 @@ class ServerTestCase(TestCase):
         subenv['LIMBO_LISTEN_HOST'] = host
         subenv['LIMBO_LISTEN_PORT'] = str(port)
         subenv['LIMBO_STORAGE_DIRECTORY'] = temp_directory.name
+        subenv['LIMBO_IS_DEBUG'] = '1'
+        subenv['PYTHONUNBUFFERED'] = '1'
 
-        process = Popen([sys.executable, server_py], cwd=root_dir, env=subenv)
+        log(f'Run subprocess: {sys.executable} {server_py}')
+        log(f'Subprocess server name: {server_name}')
+        log(f'Subprocess listen port: {port}')
+
+        process = subprocess.Popen(
+            args=[sys.executable, server_py],
+            stderr=subprocess.STDOUT,
+            cwd=root_dir,
+            env=subenv,
+        )
+
+        log(f'Subprocess PID: {process.pid}')
+
         try:
-            wait_net_service(host, port, 10)
+            started_ok = wait_net_service(host, port, 5)
+            if started_ok:
+                log('Server ' + server_name + ' started OK')
+            else:
+                log('Server ' + server_name + ' failed to start')
+                raise RuntimeError('Server failed to start')
         except Exception as exc:
             log('Got exception: ', repr(exc))
+            log(f'Terminate subprocess with {server_name} server...')
             process.terminate()
+            log(f'Wait subprocess with {server_name} server (PID {process.pid})...')
+            process.wait()
+            log(f'Subprocess with {server_name} server finished')
             temp_directory.cleanup()
             raise
         return RunningServer(temp_directory=temp_directory, process=process)
@@ -233,7 +256,7 @@ class ServerTestCase(TestCase):
         filename_bytes = b64decode('0YDRg9GB0YHQutC40Lku0YTQsNC50Ls=')
         filename = filename_bytes.decode('utf-8')
         # Paste server is known as not supporting utf-8 in file names
-        if self._server_name != 'paste':
+        if server_name != 'paste':
             self.do_test_upload_file(filename, b'some text')
 
         self.do_test_few_files()
@@ -252,10 +275,13 @@ class ServerTestCase(TestCase):
             try:
                 self.do_all_tests(server_name, base_url)
             finally:
+                log(f'Terminate subprocess with {server_name} server')
                 server.process.terminate()
+                log(f'Wait subprocess with {server_name} server (PID {server.process.pid})...')
+                server.process.wait()
+                log(f'Subprocess with {server_name} server finished')
 
-        assert self._server_name is not None
-        log('RunServerAndDoAllTests("' + self._server_name + '") finished')
+        log('RunServerAndDoAllTests("' + server_name + '") finished')
 
     def test_cherrypy(self) -> None:
         self.run_server_and_do_all_tests('cherrypy')
@@ -287,18 +313,30 @@ class ServerTestCase(TestCase):
 
 
 def main() -> None:
-    server_name = sys_argv[1] if len(sys_argv) > 1 else 'cherrypy'
+    server_name = sys.argv[1] if len(sys.argv) > 1 else 'cherrypy'
 
     log('Begin testing ' + server_name + '...')
     test = ServerTestCase()
     if server_name.startswith('http://') or server_name.startswith('https://'):
         log('Testing external server: ' + server_name)
+
+        # Waiting for external service is not necessary since we have external waiting in CI
+        # using Docker image kolomenkin/wait-for-it
+        # And external waiting may work more correct if external service is running inside of Docker
+        # while test code is running on host.
         url = urlparse(server_name)
         assert url.hostname is not None
         assert url.port is not None
-        wait_net_service(url.hostname, url.port, 10)
+        started_ok = wait_net_service(url.hostname, url.port, 5)
+        if started_ok:
+            log('Server ' + server_name + ' started OK')
+        else:
+            log('Server ' + server_name + ' failed to start')
+            sys.exit(1)
+
         test.do_all_tests('external', server_name)
     else:
+        log('Testing internal server: ' + server_name)
         test.run_server_and_do_all_tests(server_name)
 
 

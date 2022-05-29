@@ -1,14 +1,14 @@
 import logging
 import os
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime
-from subprocess import Popen
 from tempfile import TemporaryDirectory
 from typing import List, Optional, Sequence
 
 import requests
-from dataclasses_json import dataclass_json  # type: ignore
+from dataclasses_json import dataclass_json
 from requests import Response
 
 from utils.testing_helpers import get_random_bytes, wait_net_service
@@ -23,7 +23,7 @@ LISTEN_PORT = 35080
 @dataclass
 class RunningServer:
     temp_directory: 'TemporaryDirectory[str]'
-    process: 'Popen[bytes]'
+    process: 'subprocess.Popen[bytes]'
 
 
 @dataclass_json
@@ -58,12 +58,32 @@ class SpeedTest:
         # don't waste time for saving files:
         subenv['LIMBO_DISABLE_STORAGE'] = '0'
 
-        process = Popen([sys.executable, server_py], cwd=root_dir, env=subenv)
+        LOGGER.info('Run subprocess: %s %s', sys.executable, server_py)
+        LOGGER.info('Subprocess server name: %s', server_name)
+        LOGGER.info('Subprocess listen port: %d', port)
+
+        process = subprocess.Popen(
+            args=[sys.executable, server_py],
+            cwd=root_dir,
+            env=subenv,
+        )
+
+        LOGGER.info('Subprocess PID: %d', process.pid)
+
         try:
-            wait_net_service(LISTEN_HOST, port, 10)
+            started_ok = wait_net_service(LISTEN_HOST, port, 5)
+            if started_ok:
+                LOGGER.info('Server %s started OK', server_name)
+            else:
+                LOGGER.error('Server %s failed to start', server_name)
+                raise RuntimeError('Server failed to start')
         except Exception as exc:
             LOGGER.exception('Got exception: %s', repr(exc))
+            LOGGER.info('Terminate subprocess with %s server...', server_name)
             process.terminate()
+            LOGGER.info('Wait subprocess with %s server (PID %d)...', server_name, process.pid)
+            process.wait()
+            LOGGER.info('Subprocess with %s server finished', server_name)
             temp_directory.cleanup()
             raise
 
@@ -138,7 +158,11 @@ class SpeedTest:
                 LOGGER.info('===============================================')
 
             finally:
+                LOGGER.info('Terminate subprocess with %s server', server_name)
                 server.process.terminate()
+                LOGGER.info('Wait subprocess with %s server (PID %d)...', server_name, server.process.pid)
+                server.process.wait()
+                LOGGER.info('Subprocess with %s server finished', server_name)
 
         LOGGER.info('DoAllTests("%s") finished', server_name)
 

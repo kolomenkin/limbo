@@ -3,12 +3,15 @@
 # Copyright 2018-2022 Sergey Kolomenkin
 # Licensed under MIT (https://github.com/kolomenkin/limbo/blob/master/LICENSE)
 #
+import asyncio
 import json
 import logging
 import mimetypes
 import os
+import signal
 import sys
 import urllib
+import threading
 from time import time
 from typing import Any, Dict, Optional
 
@@ -39,6 +42,10 @@ STORAGE_URL_SUBDIR = '/files/'
 URLPREFIX = config.STORAGE_WEB_URL_BASE or STORAGE_URL_SUBDIR
 
 STORAGE = FileStorage(config.STORAGE_DIRECTORY, config.MAX_STORAGE_SECONDS)
+
+
+class ProcessSignals:  # pylint: disable=too-few-public-methods
+    process_is_terminating = False
 
 
 def format_size(size: int) -> str:
@@ -273,14 +280,46 @@ def server_storage(url_filename: str) -> RouteResponse:
     return response
 
 
+def run_bottle() -> None:
+    # Fix for modern tornado (5.0.2 is not affected, but 6.0.4 needs the patch):
+    # https://github.com/tornadoweb/tornado/issues/2308
+    if config.WEB_SERVER == 'tornado':
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
+    app = bottle.app()
+    bottle.run(
+        app,
+        server=config.WEB_SERVER,
+        host=config.LISTEN_HOST,
+        port=config.LISTEN_PORT,
+        debug=config.IS_DEBUG,
+    )
+    LOGGER.info('Bottle child thread finished gracefully')
+
+
+def signal_handler(signalnum: int, _stack: Any) -> None:
+    if signalnum == signal.SIGTERM:
+        LOGGER.info('Got process signal %d (SIGTERM)...', signalnum)
+        ProcessSignals.process_is_terminating = True
+    else:
+        LOGGER.info('Got process signal %d...', signalnum)
+
+
 def main() -> None:
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.DEBUG if config.IS_DEBUG else logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format='%(asctime)s000 - %(process)5d - %(name)s - %(levelname)s - %(message)s',
     )
 
     LOGGER.info('Loading...')
+
+    LOGGER.info('IS_DEBUG: %d', config.IS_DEBUG)
+    LOGGER.debug('WEB_SERVER: %s', config.WEB_SERVER)
+    LOGGER.debug('LISTEN_HOST: %s', config.LISTEN_HOST)
+    LOGGER.debug('LISTEN_PORT: %d', config.LISTEN_PORT)
+
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # treat more file extensions as text files
     # (so preview in browser will be available)
@@ -306,15 +345,34 @@ def main() -> None:
 
     bottle.TEMPLATE_PATH = [os.path.join(os.path.dirname(__file__), 'static', 'templates')]
 
-    bottle.run(app=bottle.app(),
-               server=config.WEB_SERVER,
-               host=config.LISTEN_HOST,
-               port=config.LISTEN_PORT,
-               debug=config.IS_DEBUG)
+    server_thread = threading.Thread(target=run_bottle, daemon=True, name='bottle')
+    server_thread.start()
 
+    try:
+        while server_thread.is_alive() and not ProcessSignals.process_is_terminating:
+            server_thread.join(1)
+        if not server_thread.is_alive():
+            LOGGER.info('Bottle thread was found stopped')
+        else:
+            LOGGER.info('Stopping main thread after process got special signal...')
+    except (KeyboardInterrupt, SystemExit):
+        LOGGER.warning('Caught global exception, web server thread will be killed rudely')
+
+    LOGGER.info('Unloading server %s; port %d', config.WEB_SERVER, config.LISTEN_PORT)
     LOGGER.info('Unloading...')
     STORAGE.stop()
     LOGGER.info('Unloaded')
+
+    # Paste server is running worker threads in non-daemon mode.
+    # That's why we need to make a special effort to ensure the process is really stopped here.
+    if config.WEB_SERVER == 'paste':
+        # Stop process even when non-daemon threads are still running:
+        os._exit(0)  # pylint: disable=protected-access
+
+    have_non_daemon_threads = any(not thread.daemon for thread in threading.enumerate() if thread.name != 'MainThread')
+    if have_non_daemon_threads:
+        LOGGER.error('Found some non-stopped non-daemon threads when main function is returning!')
+        LOGGER.debug('Running threads: [[[%s]]]', repr(threading.enumerate()))
 
 
 if __name__ == '__main__':
