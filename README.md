@@ -140,8 +140,7 @@ Particular web server versions can be checked in [requirements.dev.txt](requirem
 1. Install service dependencies
 
     ```bash
-    pip install -r requirements.txt
-    pip install -r requirements.dev.txt
+    pip install -r requirements.txt -r requirements.dev.txt -r requirements.func.txt
     ```
 
 1. Check syntax:
