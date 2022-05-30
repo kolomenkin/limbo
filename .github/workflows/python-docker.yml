@@ -140,3 +140,23 @@ jobs:
     uses: ./.github/workflows/publish-image.yml
     secrets:
       password: ${{ secrets.DOCKER_PASSWORD }}
+
+  create-release:
+    name: Create Release for ${{ github.ref }}
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ check-code-style, run-code-analysis, run-unit-tests, functional-tests ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      -
+        name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
