@@ -40,7 +40,7 @@ jobs:
         name: Build Docker image (my_prod:latest)
         uses: ./.github/actions/docker-build/
         with:
-          image: my_prod:latest
+          tags: my_prod:latest
           dockerfile: ./Dockerfile
           context: .
           cache-key: prod

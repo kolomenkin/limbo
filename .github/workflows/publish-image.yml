@@ -47,7 +47,7 @@ jobs:
         name: Build and publish Docker image
         uses: ./.github/actions/docker-build/
         with:
-          image: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
           load: false

@@ -49,7 +49,7 @@ jobs:
         name: Build Docker image (my_test:latest)
         uses: ./.github/actions/docker-build/
         with:
-          image: my_test:latest
+          tags: my_test:latest
           dockerfile: ./tests/Dockerfile
           context: .
           cache-key: tests
@@ -91,7 +91,7 @@ jobs:
         name: Build Docker image (my_test:latest)
         uses: ./.github/actions/docker-build/
         with:
-          image: my_test:latest
+          tags: my_test:latest
           dockerfile: ./tests/Dockerfile
           context: .
           cache-key: tests
@@ -117,7 +117,7 @@ jobs:
         name: Build Docker image (my_test:latest)
         uses: ./.github/actions/docker-build/
         with:
-          image: my_test:latest
+          tags: my_test:latest
           dockerfile: ./tests/Dockerfile
           context: .
           cache-key: tests

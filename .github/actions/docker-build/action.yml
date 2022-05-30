@@ -15,12 +15,12 @@ inputs:
     description: "Path to Dockerfile"
     required: false
     default: './Dockerfile'
-  image:
-    description: "Docker image name"
-    required: false
+  tags:
+    description: "Docker image tag list"
+    required: true
     default: "app:latest"
   labels:
-    description: "List of metadata for an image"
+    description: "List of metadata for a Docker image"
     required: false
   load:
     description: "Load is a shorthand for --output=type=docker"
@@ -35,27 +35,43 @@ runs:
   using: "composite"
   steps:
     -
+      name: Extract first Docker image tag from tag list
+      id: extract_first_tag
+      shell: bash
+      run: |
+        tags="${{ inputs.tags }}"
+        echo "tags: [[$tags]]"
+        first_tag="$(echo "$tags" | head --lines=1)"
+        echo "first_tag: [[$first_tag]]"
+        echo "::set-output name=value::$first_tag"
+    -
+      name: Calculate docker cache directory
+      id: get_cache_dir
+      shell: bash
+      run: |
+        echo "::set-output name=value::/tmp/.buildx-cache-${{ steps.extract_first_tag.outputs.value }}"
+    -
       name: Set up Cache for Docker build
       uses: actions/cache@v2
       with:
-        path: /tmp/.buildx-cache-${{ inputs.image }}
+        path: ${{ steps.get_cache_dir.outputs.value }}
         key: ${{ runner.os }}-buildx-${{ inputs.cache-key }}-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-${{ inputs.cache-key }}-
           ${{ runner.os }}-buildx-
     -
       name: Build Docker image
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
         pull: true
         push: ${{ inputs.push }}
         load: ${{ inputs.load }}
-        tags: ${{ inputs.image }}
+        tags: ${{ inputs.tags }}
         labels: ${{ inputs.labels }}
-        cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.image }}
-        cache-to: type=local,dest=/tmp/.buildx-cache-${{ inputs.image }}-new,mode=max
+        cache-from: type=local,src=${{ steps.get_cache_dir.outputs.value }}
+        cache-to: type=local,dest=${{ steps.get_cache_dir.outputs.value }}-new,mode=max
     -
       name: Archive Docker build cache results
       # Docker image layer solution origin:
@@ -64,9 +80,9 @@ runs:
       shell: sh
       run: |
         echo "Archive Docker build cache results..."
-        [ -f "/tmp/.buildx-cache-${{ inputs.image }}" ] && \
-          du --human-readable --summarize -- "/tmp/.buildx-cache-${{ inputs.image }}"
-        du --human-readable --summarize -- "/tmp/.buildx-cache-${{ inputs.image }}-new"
-        rm -rf -- "/tmp/.buildx-cache-${{ inputs.image }}"
-        mv -- "/tmp/.buildx-cache-${{ inputs.image }}-new" "/tmp/.buildx-cache-${{ inputs.image }}"
+        [ -f "/tmp/.buildx-cache-$first_tag" ] && \
+          du --human-readable --summarize -- "${{ steps.get_cache_dir.outputs.value }}"
+        du --human-readable --summarize -- "${{ steps.get_cache_dir.outputs.value }}-new"
+        rm -rf -- "${{ steps.get_cache_dir.outputs.value }}"
+        mv -- "${{ steps.get_cache_dir.outputs.value }}-new" "${{ steps.get_cache_dir.outputs.value }}"
         echo "Moving Docker build cache finished"
