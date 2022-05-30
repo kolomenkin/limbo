@@ -92,7 +92,7 @@ class SpeedTest:
     @staticmethod
     def check_response(response: Response) -> None:
         if response.status_code != 200:
-            raise Exception('Bad server reply code: ' + str(response.status_code))
+            raise Exception(f'Bad server reply code: {response.status_code}')
 
     def get_stored_files(self) -> Sequence[FileOnServer]:
         assert self._base_url is not None
@@ -117,14 +117,14 @@ class SpeedTest:
         # filename*=utf-8\'\'%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9.%D1%84%D0%B0%D0%B9%D0%BB
         # This is why I'm constructing multipart message manually
 
-        boundary = b'Ab522e64be24449aa3131245da23b3yZ'
-        encoded_filename = original_filename.encode('utf-8')
-        payload = b'--' + boundary + b'\r\nContent-Disposition: form-data' \
-                  + b'; name="file"; filename="' + encoded_filename \
-                  + b'"\r\n\r\n' + filedata + b'\r\n--' + boundary + b'--\r\n'
+        boundary = 'Ab522e64be24449aa3131245da23b3yZ'
 
-        content_type = 'multipart/form-data; boundary=' + boundary.decode('utf-8')
-        headers = {'Content-Type': content_type}
+        payload_prefix = \
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{original_filename}"\r\n\r\n'
+        payload_postfix = f'\r\n--{boundary}--\r\n'
+        payload = payload_prefix.encode('utf-8') + filedata + payload_postfix.encode('utf-8')
+
+        headers = {'Content-Type': f'multipart/form-data; boundary={boundary}'}
 
         response = requests.post(url, data=payload, headers=headers)
 
@@ -133,7 +133,7 @@ class SpeedTest:
     def do_all_tests(self, server_name: str) -> None:
         port = LISTEN_PORT
 
-        self._base_url = 'http://' + LISTEN_HOST + ':' + str(port)
+        self._base_url = f'http://{LISTEN_HOST}:{port}'
         LOGGER.info('DoTest("%s") start', server_name)
         server: RunningServer = self.run_child_server(server_name, port)
 

@@ -82,12 +82,12 @@ class ServerTestCase(TestCase):
         try:
             started_ok = wait_net_service(host, port, 5)
             if started_ok:
-                log('Server ' + server_name + ' started OK')
+                log(f'Server {server_name} started OK')
             else:
-                log('Server ' + server_name + ' failed to start')
+                log(f'Server {server_name} failed to start')
                 raise RuntimeError('Server failed to start')
         except Exception as exc:
-            log('Got exception: ', repr(exc))
+            log(f'Got exception: {exc!r}')
             log(f'Terminate subprocess with {server_name} server...')
             process.terminate()
             log(f'Wait subprocess with {server_name} server (PID {process.pid})...')
@@ -100,7 +100,7 @@ class ServerTestCase(TestCase):
     @staticmethod
     def check_response(response: Response) -> None:
         if response.status_code != 200:
-            raise Exception('Bad server reply code: ' + str(response.status_code))
+            raise Exception(f'Bad server reply code: {response.status_code}')
 
     def get_stored_files(self) -> Sequence[FileOnServer]:
         assert self._base_url is not None
@@ -134,14 +134,14 @@ class ServerTestCase(TestCase):
         # filename*=utf-8\'\'%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9.%D1%84%D0%B0%D0%B9%D0%BB
         # This is why I'm constructing multipart message manually
 
-        boundary = b'Ab522e64be24449aa3131245da23b3yZ'
-        encoded_filename = original_filename.encode('utf-8')
-        payload = b'--' + boundary + b'\r\nContent-Disposition: form-data' \
-                  + b'; name="file"; filename="' + encoded_filename \
-                  + b'"\r\n\r\n' + filedata + b'\r\n--' + boundary + b'--\r\n'
+        boundary = 'Ab522e64be24449aa3131245da23b3yZ'
 
-        content_type = 'multipart/form-data; boundary=' + boundary.decode('utf-8')
-        headers = {'Content-Type': content_type}
+        payload_prefix = \
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{original_filename}"\r\n\r\n'
+        payload_postfix = f'\r\n--{boundary}--\r\n'
+        payload = payload_prefix.encode('utf-8') + filedata + payload_postfix.encode('utf-8')
+
+        headers = {'Content-Type': f'multipart/form-data; boundary={boundary}'}
 
         response = requests.post(url, data=payload, headers=headers)
 
@@ -173,11 +173,11 @@ class ServerTestCase(TestCase):
     def on_test_start(self, test_name: str) -> None:
         assert self._server_name is not None
         log('=============================================')
-        log('TEST: ' + self._server_name + ': ' + test_name)
+        log(f'TEST: {self._server_name}: {test_name}')
         log('=============================================')
 
     def do_test_upload_file(self, name: str, data: bytes) -> None:
-        self.on_test_start('FileUpload("' + name + '")')
+        self.on_test_start(f'FileUpload("{name}")')
         self.remove_all_files()
         self.assertEqual(0, len(self.get_stored_files()))
 
@@ -194,7 +194,7 @@ class ServerTestCase(TestCase):
         self.assertEqual(0, len(self.get_stored_files()))
 
     def do_test_upload_text(self, name: str, text: str) -> None:
-        self.on_test_start('TextUpload("' + name + '")')
+        self.on_test_start(f'TextUpload("{name}")')
         self.remove_all_files()
         self.assertEqual(0, len(self.get_stored_files()))
 
@@ -267,8 +267,8 @@ class ServerTestCase(TestCase):
     def run_server_and_do_all_tests(self, server_name: str) -> None:
         host = DEFAULT_LISTEN_HOST
         port = DEFAULT_LISTEN_PORT
-        base_url = 'http://' + host + ':' + str(port)
-        log('RunServerAndDoAllTests("' + server_name + '") start')
+        base_url = f'http://{host}:{port}'
+        log(f'RunServerAndDoAllTests("{server_name}") start')
         server: RunningServer = self.run_child_server(server_name, host, port)
 
         with server.temp_directory:
@@ -281,7 +281,7 @@ class ServerTestCase(TestCase):
                 server.process.wait()
                 log(f'Subprocess with {server_name} server finished')
 
-        log('RunServerAndDoAllTests("' + server_name + '") finished')
+        log(f'RunServerAndDoAllTests("{server_name}") finished')
 
     def test_cheroot(self) -> None:
         self.run_server_and_do_all_tests('cheroot')
@@ -315,10 +315,10 @@ class ServerTestCase(TestCase):
 def main() -> None:
     server_name = sys.argv[1] if len(sys.argv) > 1 else 'cheroot'
 
-    log('Begin testing ' + server_name + '...')
+    log(f'Begin testing {server_name}...')
     test = ServerTestCase()
     if server_name.startswith('http://') or server_name.startswith('https://'):
-        log('Testing external server: ' + server_name)
+        log(f'Testing external server: {server_name}')
 
         # Waiting for external service is not necessary since we have external waiting in CI
         # using Docker image kolomenkin/wait-for-it
@@ -329,14 +329,14 @@ def main() -> None:
         assert url.port is not None
         started_ok = wait_net_service(url.hostname, url.port, 5)
         if started_ok:
-            log('Server ' + server_name + ' started OK')
+            log(f'Server {server_name} started OK')
         else:
-            log('Server ' + server_name + ' failed to start')
+            log(f'Server {server_name} failed to start')
             sys.exit(1)
 
         test.do_all_tests('external', server_name)
     else:
-        log('Testing internal server: ' + server_name)
+        log(f'Testing internal server: {server_name}')
         test.run_server_and_do_all_tests(server_name)
 
 

@@ -133,7 +133,7 @@ def cgi_addtext() -> MethodResponse:
     forms: bottle.FormsDict = bottle.request.forms
     text_title = forms.title  # pylint: disable=no-member
     LOGGER.info('Share text begin: %s', text_title)
-    original_filename = text_title + '.txt'
+    original_filename = f'{text_title}.txt'
     body = bytearray(forms.body, encoding='utf-8')  # pylint: disable=no-member
 
     with STORAGE.open_file_writer(original_filename) as writer:
@@ -253,7 +253,7 @@ def server_storage(url_filename: str) -> RouteResponse:
     # (and not text/html for example)
 
     # Missing extension is treated as .txt extension
-    mime_filename = info.display_filename if '.' in info.display_filename else info.display_filename + '.txt'
+    mime_filename = info.display_filename if '.' in info.display_filename else f'{info.display_filename}.txt'
 
     mimetype, _ = mimetypes.guess_type(mime_filename)
     mimetype = str(mimetype)
