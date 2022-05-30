@@ -19,7 +19,7 @@ set LIMBO_LISTEN_PORT=8080
 python --version
 
 REM install dependencies
-python -m pip install -r requirements.txt
+python -m pip install --requirement=requirements.txt
 
 python server.py
 

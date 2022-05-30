@@ -1,8 +1,8 @@
 FROM python:3.7.6-alpine
 
 RUN set -ex \
-    && apk add --no-cache make \
-    && apk add --no-cache --virtual=.build-essential \
+    && apk add --no-cache -- make \
+    && apk add --no-cache --virtual=.build-essential -- \
         gcc \
         musl-dev
 
@@ -12,7 +12,7 @@ COPY \
 
 RUN set -ex \
     && pip install \
-        -r /opt/limbo_dependencies/requirements.txt
+        --requirement=/opt/limbo_dependencies/requirements.txt
 
 COPY \
     ./requirements.dev.txt \
@@ -20,11 +20,11 @@ COPY \
 
 RUN set -ex \
     && pip install \
-        -r /opt/limbo_dependencies/requirements.dev.txt
+        --requirement=/opt/limbo_dependencies/requirements.dev.txt
 
 RUN set -ex \
-    && apk del .build-essential \
-    && mkdir -p -m 777 /tmp/storage
+    && apk del -- .build-essential \
+    && mkdir --parents --mode=777 -- /tmp/storage
 
 ENV PYTHONUNBUFFERED=1 \
     LIMBO_STORAGE_DIRECTORY=/tmp/storage
