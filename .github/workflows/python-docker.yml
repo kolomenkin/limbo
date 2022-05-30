@@ -139,5 +139,4 @@ jobs:
     needs: [ check-code-style, run-code-analysis, run-unit-tests, functional-tests ]
     uses: ./.github/workflows/publish-image.yml
     secrets:
-      username: ${{ secrets.DOCKER_USERNAME }}
       password: ${{ secrets.DOCKER_PASSWORD }}

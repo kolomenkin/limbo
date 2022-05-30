@@ -3,9 +3,16 @@ name: "Publish Docker image"
 
 on: # yamllint disable-line rule:truthy
   workflow_call:
-    secrets:
+    inputs:
       username:
-        required: true
+        required: false
+        type: string
+        default: kolomenkin
+      image:
+        required: false
+        type: string
+        default: kolomenkin/limbo
+    secrets:
       password:
         required: true
 
@@ -23,14 +30,14 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.username }}
+          username: ${{ inputs.username }}
           password: ${{ secrets.password }}
       -
         name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: kolomenkin/limbo
+          images: ${{ inputs.image }}
       -
         uses: actions/checkout@v3
       -
