@@ -10,8 +10,8 @@ import mimetypes
 import os
 import signal
 import sys
-import urllib
 import threading
+import urllib.parse
 from time import time
 from typing import Any, Dict, List, Mapping, Optional, Union
 

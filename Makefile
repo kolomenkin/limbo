@@ -39,7 +39,7 @@ check-md:
 # Using two slashes at the beginning of the paths for Windows bash shell
 	docker run --rm --tty --network=none --volume="${CURDIR}:/markdown:ro" \
 		--workdir=//markdown/ \
-		06kellyjac/markdownlint-cli:0.27.1-alpine \
+		06kellyjac/markdownlint-cli:0.28.1-alpine \
             --config=${MARKDOWNLINT_CONFIG} \
 			-- ./
 
