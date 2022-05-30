@@ -3,7 +3,6 @@ name: "Python version matrix"
 
 on: # yamllint disable-line rule:truthy
   push:
-  pull_request:
 
 permissions:
   contents: read

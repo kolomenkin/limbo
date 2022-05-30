@@ -3,7 +3,6 @@ name: "Check and test code (docker)"
 
 on: # yamllint disable-line rule:truthy
   push:
-  pull_request:
 
 permissions:
   contents: read
