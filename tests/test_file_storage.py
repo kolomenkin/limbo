@@ -28,7 +28,7 @@ class TempStorage:
 
 
 def get_temp_file_storage() -> TempStorage:
-    temp_directory = TemporaryDirectory()
+    temp_directory = TemporaryDirectory()  # pylint: disable=consider-using-with
     print('created temporary directory: ' + temp_directory.name)
     storage = FileStorage(temp_directory.name, 24 * 3600)
     return TempStorage(temp_directory=temp_directory, storage=storage)

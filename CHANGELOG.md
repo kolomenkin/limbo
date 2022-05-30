@@ -22,7 +22,7 @@ v1.4 [2018-06-13]
 ------
 
 - process request body by chunks. Don't need to save big uploaded files to disk twice any more.
-- only one web server is found to work fine now: `cherrypy`
+- only one web server is found to work fine now: `cherrypy` (later it was renamed to `cheroot`)
 - added speed test script for web server speed compare
 - atomic files upload: file is never stored partially if upload was not complete
 - web page redesign: make corners round

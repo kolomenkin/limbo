@@ -46,7 +46,7 @@ overloaded using environment variables.
 - `LIMBO_WEB_SERVER`  
     Default value is `wsgiref`. Python web server name. `wsgiref` is available by
     default. Other values will need installing appropriate python component.
-    Supported values: `wsgiref`, `paste`, `cherrypy`, ...
+    Supported values: `wsgiref`, `paste`, `cheroot`, ...
 - `LIMBO_LISTEN_HOST`  
     Default value is `localhost`. IP address to listen.
     Usually `127.0.0.1` or `localhost` should be used for local testing, `0.0.0.0` for production.
@@ -123,7 +123,7 @@ Here is a number of bottle-compliant WSGI web servers tested with Limbo.
 Particular web server versions can be checked in [requirements.dev.txt](requirements.dev.txt)
 
 - wsgiref - logging to console, does not support async post body reading
-- cherrypy - works, no logging to console
+- cheroot (ex-cherrypy) - works, no logging to console
 - tornado - no logging to console, does not support big file upload (100+ MB)
 - twisted - slow works, no logging to console, very slow
   (ignores async nature of streaming_form_data)

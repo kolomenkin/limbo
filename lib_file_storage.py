@@ -49,7 +49,7 @@ class AtomicFile:
             raise Exception('Destination file already exists')
         self._temp_filename = temp_filename
         self._final_filename = final_filename
-        self._fd = io.open(self._temp_filename, 'wb')
+        self._fd = io.open(self._temp_filename, 'wb')  # pylint: disable=consider-using-with
 
     def write(self, data: bytes) -> None:
         self._fd.write(data)

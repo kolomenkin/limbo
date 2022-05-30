@@ -47,7 +47,7 @@ class SpeedTest:
         root_dir = os.path.join(script_dir, '..')
         server_py = os.path.join(root_dir, 'server.py')
 
-        temp_directory = TemporaryDirectory()
+        temp_directory = TemporaryDirectory()  # pylint: disable=consider-using-with
         LOGGER.info('created temporary directory: %s', temp_directory.name)
 
         subenv = os.environ.copy()
@@ -62,7 +62,7 @@ class SpeedTest:
         LOGGER.info('Subprocess server name: %s', server_name)
         LOGGER.info('Subprocess listen port: %d', port)
 
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # pylint: disable=consider-using-with
             args=[sys.executable, server_py],
             cwd=root_dir,
             env=subenv,
@@ -100,8 +100,7 @@ class SpeedTest:
         LOGGER.info('Request: GET %s', url)
         response = requests.get(url)
         self.check_response(response)
-        files: List[FileOnServer] = \
-            FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member
+        files: List[FileOnServer] = FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member  # noqa: E501
         files = sorted(files, key=lambda item: item.display_filename)
         return files
 
@@ -174,7 +173,7 @@ def main() -> None:
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     )
 
-    server_name = sys.argv[1] if len(sys.argv) > 1 else 'cherrypy'
+    server_name = sys.argv[1] if len(sys.argv) > 1 else 'cheroot'
     LOGGER.info('Speed testing %s...', server_name)
     test = SpeedTest()
     test.do_all_tests(server_name)

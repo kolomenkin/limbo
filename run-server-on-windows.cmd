@@ -12,7 +12,7 @@ if not "%DEV_FULLPATH%" == "" (
 )
 
 REM set LIMBO_IS_DEBUG=1
-set LIMBO_WEB_SERVER=cherrypy
+set LIMBO_WEB_SERVER=cheroot
 set LIMBO_LISTEN_HOST=127.0.0.1
 set LIMBO_LISTEN_PORT=8080
 

@@ -6,5 +6,5 @@ import os
 import stat
 
 
-def get_file_modified_unixtime(pathname: str) -> int:
+def get_file_modified_unixtime(pathname: str) -> float:
     return os.stat(pathname)[stat.ST_MTIME]

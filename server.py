@@ -13,11 +13,11 @@ import sys
 import urllib
 import threading
 from time import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Mapping, Optional, Union
 
+import bottle
 from streaming_form_data import StreamingFormDataParser
 from streaming_form_data.targets import BaseTarget, NullTarget
-import bottle
 
 import config
 from lib_bottle import bottle_get, bottle_post, bottle_route, bottle_view, RouteResponse
@@ -74,11 +74,16 @@ def format_age(seconds: int) -> str:
     return f'{minutes // 60}h {minutes % 60}m'
 
 
+def assert_float_int(value: Any) -> Union[float, int]:
+    assert isinstance(value, (float, int)), type(value)
+    return value
+
+
 @bottle_route('/')
 @bottle_view('root.html')
 def root_page() -> ViewResponse:
     LOGGER.info('Root page is requested')
-    result_files = []
+    result_files: List[Mapping[str, Any]] = []
     files = STORAGE.enumerate_files()
     now = time()
     for file in files:
@@ -93,7 +98,7 @@ def root_page() -> ViewResponse:
                 'sortBy': now - modified_unixtime,
             }
         )
-    result_files = sorted(result_files, key=lambda item: item['sortBy'])
+    result_files = sorted(result_files, key=lambda item: assert_float_int(item['sortBy']))
     return {
         'title': 'Limbo: the file sharing lightweight service',
         'h1': 'Limbo. The file sharing lightweight service',
@@ -119,7 +124,7 @@ def cgi_enumerate() -> MethodResponse:
                 'modified': modified_unixtime,
             }
         )
-    result_files = sorted(result_files, key=lambda item: item['modified'])
+    result_files = sorted(result_files, key=lambda item: assert_float_int(item['modified']))
     return json.dumps(result_files, indent=4)
 
 
@@ -265,7 +270,7 @@ def server_storage(url_filename: str) -> RouteResponse:
             root=info.storage_directory,
             mimetype=mimetype,
         )
-        content_disposition = 'inline; filename="%s"' % quoted_display_filename
+        content_disposition = f'inline; filename="{quoted_display_filename}"'
         response.set_header('Content-Disposition', content_disposition)
     else:
         response = bottle.static_file(

@@ -15,7 +15,7 @@ RUN set -ex \
 
 ENV PYTHONUNBUFFERED=1 \
     LIMBO_STORAGE_DIRECTORY=/tmp/storage \
-    LIMBO_WEB_SERVER=cherrypy \
+    LIMBO_WEB_SERVER=cheroot \
     LIMBO_LISTEN_HOST=0.0.0.0 \
     LIMBO_LISTEN_PORT=80
 

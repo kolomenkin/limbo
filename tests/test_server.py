@@ -43,7 +43,7 @@ class FileOnServer:
 class ServerTestCase(TestCase):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super(ServerTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # added to uploaded to server text fragment names:
         self._text_filename_postfix = '.txt'
         self._server_name: Optional[str] = None
@@ -55,7 +55,7 @@ class ServerTestCase(TestCase):
         root_dir = os.path.join(script_dir, '..')
         server_py = os.path.join(root_dir, 'server.py')
 
-        temp_directory = TemporaryDirectory()
+        temp_directory = TemporaryDirectory()  # pylint: disable=consider-using-with
         log('created temporary directory: ' + temp_directory.name)
 
         subenv = os.environ.copy()
@@ -70,7 +70,7 @@ class ServerTestCase(TestCase):
         log(f'Subprocess server name: {server_name}')
         log(f'Subprocess listen port: {port}')
 
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # pylint: disable=consider-using-with
             args=[sys.executable, server_py],
             stderr=subprocess.STDOUT,
             cwd=root_dir,
@@ -108,8 +108,8 @@ class ServerTestCase(TestCase):
         log('Request: GET ' + url)
         response = requests.get(url)
         self.check_response(response)
-        files: List[FileOnServer] = \
-            FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member
+        files: List[FileOnServer] = FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member  # noqa: E501
+        # xtype: ignore  # xpylint: disable=no-member
         files = sorted(files, key=lambda item: item.display_filename)
         return files
 
@@ -283,8 +283,8 @@ class ServerTestCase(TestCase):
 
         log('RunServerAndDoAllTests("' + server_name + '") finished')
 
-    def test_cherrypy(self) -> None:
-        self.run_server_and_do_all_tests('cherrypy')
+    def test_cheroot(self) -> None:
+        self.run_server_and_do_all_tests('cheroot')
 
     # def test_flup(self) -> None:
     #     self.RunServerAndDoAllTests('flup')
@@ -313,7 +313,7 @@ class ServerTestCase(TestCase):
 
 
 def main() -> None:
-    server_name = sys.argv[1] if len(sys.argv) > 1 else 'cherrypy'
+    server_name = sys.argv[1] if len(sys.argv) > 1 else 'cheroot'
 
     log('Begin testing ' + server_name + '...')
     test = ServerTestCase()
