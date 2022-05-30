@@ -136,6 +136,7 @@ jobs:
 
   publish-image:
     name: Build and publish Docker image
+    if: github.event_name != 'pull_request'
     needs: [ check-code-style, run-code-analysis, run-unit-tests, functional-tests ]
     uses: ./.github/workflows/publish-image.yml
     secrets:

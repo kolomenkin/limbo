@@ -35,9 +35,11 @@ jobs:
       -
         name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ inputs.image }}
+          labels: |
+            org.opencontainers.image.authors=Sergey Kolomenkin (https://github.com/kolomenkin)
       -
         uses: actions/checkout@v3
       -
