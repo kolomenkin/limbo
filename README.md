@@ -10,9 +10,6 @@ https://github.com/kolomenkin/limbo/archive/refs/heads/master.zip)
 [![Docker Image Size (tag)](
 https://img.shields.io/docker/image-size/kolomenkin/limbo/latest)](
 https://hub.docker.com/r/kolomenkin/limbo/tags?page=1&name=latest)
-[![GitHub branch checks state](
-https://img.shields.io/github/checks-status/kolomenkin/limbo/master)](
-https://github.com/kolomenkin/limbo/commits/master)
 
 | Branch      | CI Build Status using raw Python environments                                                                                                                                                                | CI Build Status using Docker images                                                                                                                                                                              |
 |-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
