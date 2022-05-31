@@ -144,7 +144,7 @@ def cgi_addtext() -> MethodResponse:
     except FileAlreadyExistsException as exc:
         LOGGER.error('Shared text: FileAlreadyExistsException: %s', exc)
         bottle.response.status = 403
-        return {'status': 'failed', 'error_details': 'FileAlreadyExists'}
+        return {'status': 'failed', 'error': 'FileAlreadyExists'}
 
     LOGGER.info('Shared text size: %d', len(body))
     return {'status': 'ok'}
@@ -221,7 +221,7 @@ def cgi_upload() -> MethodResponse:
     except FileAlreadyExistsException as exc:
         LOGGER.error('Uploaded file: FileAlreadyExistsException: %s', exc)
         bottle.response.status = 403
-        return {'status': 'failed', 'error_details': 'FileAlreadyExists'}
+        return {'status': 'failed', 'error': 'FileAlreadyExists'}
 
     return {'status': 'ok'}
 

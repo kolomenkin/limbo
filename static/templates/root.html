@@ -115,7 +115,7 @@
 
 		<script>
 			Dropzone.confirm = function(question, accepted, rejected) {
-				   return accepted()
+				return accepted()
 			}
 
 			Dropzone.options.dropzone = {
@@ -124,20 +124,25 @@
 				addRemoveLinks: true,
 				dictCancelUpload: "Cancel",
 				dictRemoveFile: "Remove",
-				init: function() {
-					var self = this
 
-					this.on("canceled", function(file) {
-						self.removeFile(file)
+				init: function() {
+					var myDropZone = this
+
+					myDropZone.on("error", function(file) {
+						alert("Failed adding file: " + file.name);
 					})
 
-					this.on("removedfile", function(file) {
+					myDropZone.on("canceled", function(file) {
+						myDropZone.removeFile(file)
+					})
+
+					myDropZone.on("removedfile", function(file) {
                         // Next line is commented since incomplete upload support
                         // is implemented on server level
 						//removeFileRequest(null, file.name)
 					})
 
-					this.on("queuecomplete", function(){
+					myDropZone.on("queuecomplete", function(){
 						location.reload()
 					})
 				},
@@ -156,7 +161,7 @@
                         }
 					},
 					error: function() {
-						alert("Can't remove " + fileName)
+						alert("Failed removing " + fileName)
 					}
 				})
 			}
@@ -209,7 +214,7 @@
 						location.reload()
 					},
 					error: function() {
-						alert("Can't share text")
+						alert("Failed adding text file: " + title)
 					}
 				})
 			})
