@@ -31,6 +31,7 @@ All files are automatically deleted 24 hours after upload.
 ## Requirements
 
 - Python 3.7 - 3.10
+- Dockerhub official image: <https://hub.docker.com/repository/docker/kolomenkin/limbo>
 - Requirements for production: [requirements.txt](requirements.txt)
 - Additional requirements for development: [requirements.dev.txt](requirements.dev.txt)
 
