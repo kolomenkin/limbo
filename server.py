@@ -12,6 +12,7 @@ import signal
 import sys
 import threading
 import urllib.parse
+from pathlib import Path
 from time import time
 from typing import Any, Dict, List, Mapping, Optional, Union
 
@@ -93,7 +94,7 @@ def root_page() -> ViewResponse:
                 'display_filename': file.display_filename,
                 'url': URLPREFIX + urllib.parse.quote(file.url_filename),
                 'url_filename': file.url_filename,
-                'size': format_size(os.path.getsize(file.full_disk_filename)),
+                'size': format_size(file.full_disk_filename.stat().st_size),
                 'age': format_age(int(now - modified_unixtime)),
                 'sortBy': now - modified_unixtime,
             }
@@ -120,7 +121,7 @@ def cgi_enumerate() -> MethodResponse:
                 'display_filename': file.display_filename,
                 'url': URLPREFIX + urllib.parse.quote(file.url_filename),
                 'url_filename': file.url_filename,
-                'size': os.path.getsize(file.full_disk_filename),
+                'size': file.full_disk_filename.stat().st_size,
                 'modified': modified_unixtime,
             }
         )
@@ -232,8 +233,8 @@ def cgi_remove_all() -> MethodResponse:
 @bottle_route('/static/<urlpath:path>')
 def server_static(urlpath: str) -> RouteResponse:
     LOGGER.debug('Static file requested: %s', urlpath)
-    root_folder = os.path.abspath(os.path.dirname(__file__))
-    response = bottle.static_file(urlpath, root=os.path.join(root_folder, 'static'))
+    root_folder = Path(__file__).parent.absolute()
+    response = bottle.static_file(urlpath, root=root_folder / 'static')
     response.set_header('Cache-Control', 'public, max-age=604800')
     return response
 
@@ -348,7 +349,7 @@ def main() -> None:
 
     LOGGER.info('Start server...')
 
-    bottle.TEMPLATE_PATH = [os.path.join(os.path.dirname(__file__), 'static', 'templates')]
+    bottle.TEMPLATE_PATH = [Path(__file__).parent / 'static' / 'templates']
 
     server_thread = threading.Thread(target=run_bottle, daemon=True, name='bottle')
     server_thread.start()

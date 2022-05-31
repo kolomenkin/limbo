@@ -1,16 +1,12 @@
 from base64 import b64decode
 from dataclasses import dataclass
-from os import path as os_path
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Sequence
 from unittest import TestCase
 
 from numpy import random
 
-# add parent dir to search for imported modules
-# import os, sys
-# script_dir = os.path.dirname(os.path.abspath(__file__))
-# sys.path.insert(0, script_dir + '/../')
 from lib_file_storage import DisplayFileItem, FileStorage, StorageFileItem
 
 
@@ -30,7 +26,7 @@ class TempStorage:
 def get_temp_file_storage() -> TempStorage:
     temp_directory = TemporaryDirectory()  # pylint: disable=consider-using-with
     print('created temporary directory: ' + temp_directory.name)
-    storage = FileStorage(temp_directory.name, 24 * 3600)
+    storage = FileStorage(Path(temp_directory.name), 24 * 3600)
     return TempStorage(temp_directory=temp_directory, storage=storage)
 
 
@@ -53,14 +49,14 @@ class FileStorageTestCase(TestCase):
         url_filename = item.url_filename
         display_filename = item.display_filename
         self.assertEqual(display_filename, original_filename)
-        size = os_path.getsize(item.full_disk_filename)
+        size = item.full_disk_filename.stat().st_size
         self.assertEqual(size, len(original_filedata))
 
         info: StorageFileItem = storage.get_file_info_to_read(url_filename)
-        self.assertEqual(info.storage_directory, temp_storage.temp_directory.name)
+        self.assertEqual(info.storage_directory, Path(temp_storage.temp_directory.name))
         self.assertEqual(info.display_filename, display_filename)
 
-        fullpath = os_path.join(info.storage_directory, info.disk_filename)
+        fullpath = info.storage_directory / info.disk_filename
         with open(fullpath, 'rb') as file:
             filedata = file.read()
             self.assertEqual(filedata, original_filedata)
@@ -122,13 +118,13 @@ class FileStorageTestCase(TestCase):
         item = files[0]
         url_filename1 = item.url_filename
         self.assertEqual(item.display_filename, original_filename1)
-        size = os_path.getsize(item.full_disk_filename)
+        size = item.full_disk_filename.stat().st_size
         self.assertEqual(size, len(original_filedata1))
 
         item = files[1]
         url_filename2 = item.url_filename
         self.assertEqual(item.display_filename, original_filename2)
-        size = os_path.getsize(item.full_disk_filename)
+        size = item.full_disk_filename.stat().st_size
         self.assertEqual(size, len(original_filedata2))
 
         storage.remove_file(url_filename1)

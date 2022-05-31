@@ -4,6 +4,7 @@ import sys
 from base64 import b64decode
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, List, Optional, Sequence
 from unittest import TestCase
@@ -51,9 +52,9 @@ class ServerTestCase(TestCase):
 
     @staticmethod
     def run_child_server(server_name: str, host: str, port: int) -> RunningServer:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        root_dir = os.path.join(script_dir, '..')
-        server_py = os.path.join(root_dir, 'server.py')
+        script_dir = Path(__file__).parent.absolute()
+        root_dir = script_dir.parent
+        server_py = root_dir / 'server.py'
 
         temp_directory = TemporaryDirectory()  # pylint: disable=consider-using-with
         log('created temporary directory: ' + temp_directory.name)
