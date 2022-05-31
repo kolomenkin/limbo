@@ -8,17 +8,16 @@ https://github.com/kolomenkin/limbo/releases)
 https://img.shields.io/github/languages/code-size/kolomenkin/limbo)](
 https://github.com/kolomenkin/limbo/archive/refs/heads/master.zip)
 [![Docker Image Size (tag)](
-https://img.shields.io/docker/image-size/kolomenkin/limbo/master)](
-https://hub.docker.com/r/kolomenkin/limbo/tags?page=1&name=master)  
-[![Master branch travis build status](
-https://travis-ci.org/kolomenkin/limbo.svg?branch=master)](
-https://travis-ci.org/kolomenkin/limbo)
+https://img.shields.io/docker/image-size/kolomenkin/limbo/latest)](
+https://hub.docker.com/r/kolomenkin/limbo/tags?page=1&name=latest)
 [![GitHub branch checks state](
 https://img.shields.io/github/checks-status/kolomenkin/limbo/master)](
 https://github.com/kolomenkin/limbo/commits/master)
-[![Libraries.io dependency status for GitHub repo](
-https://img.shields.io/librariesio/github/kolomenkin/limbo)](
-https://libraries.io/github/kolomenkin/limbo)
+
+| Branch      | CI Build Status using raw Python environments                                                                                                                                                                | CI Build Status using Docker images                                                                                                                                                                              |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **master**  | [![CI status](https://github.com/kolomenkin/limbo/actions/workflows/python-raw.yml/badge.svg?branch=master)](https://github.com/kolomenkin/limbo/actions/workflows/python-raw.yml?query=branch%3Amaster)     | [![CI status](https://github.com/kolomenkin/limbo/actions/workflows/python-docker.yml/badge.svg?branch=master)](https://github.com/kolomenkin/limbo/actions/workflows/python-docker.yml?query=branch%3Amaster)   |
+| **develop** | [![CI status](https://github.com/kolomenkin/limbo/actions/workflows/python-raw.yml/badge.svg?branch=develop)](https://github.com/kolomenkin/limbo/actions/workflows/python-raw.yml?query=branch%3Adevelop)   | [![CI status](https://github.com/kolomenkin/limbo/actions/workflows/python-docker.yml/badge.svg?branch=develop)](https://github.com/kolomenkin/limbo/actions/workflows/python-docker.yml?query=branch%3Adevelop) |
 
 This project implements lightweight web page with easy possibility
 to upload, download, list, remove files.  
