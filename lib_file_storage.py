@@ -42,10 +42,14 @@ def clean_filename(filename: str) -> str:
     return result
 
 
+class FileAlreadyExistsException(Exception):
+    pass
+
+
 class AtomicFile:
     def __init__(self, temp_filename: Path, final_filename: Path):
         if final_filename.is_file():
-            raise Exception('Destination file already exists')
+            raise FileAlreadyExistsException(f'Destination file already exists: {final_filename.name}')
         self._temp_filename: Path = temp_filename
         self._final_filename: Path = final_filename
         self._fd = self._temp_filename.open('wb')  # pylint: disable=consider-using-with

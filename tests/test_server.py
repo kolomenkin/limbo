@@ -72,7 +72,7 @@ class ServerTestCase(TestCase):
         log(f'Subprocess listen port: {port}')
 
         process = subprocess.Popen(  # pylint: disable=consider-using-with
-            args=[sys.executable, server_py],
+            args=[sys.executable, str(server_py)],
             stderr=subprocess.STDOUT,
             cwd=root_dir,
             env=subenv,

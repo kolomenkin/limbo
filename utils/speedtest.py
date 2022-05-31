@@ -64,7 +64,7 @@ class SpeedTest:
         LOGGER.info('Subprocess listen port: %d', port)
 
         process = subprocess.Popen(  # pylint: disable=consider-using-with
-            args=[sys.executable, server_py],
+            args=[sys.executable, str(server_py)],
             cwd=root_dir,
             env=subenv,
         )

@@ -23,11 +23,11 @@ from streaming_form_data.targets import BaseTarget, NullTarget
 import config
 from lib_bottle import bottle_get, bottle_post, bottle_route, bottle_view, RouteResponse
 from lib_common import get_file_modified_unixtime
-from lib_file_storage import AtomicFile, FileStorage, StorageFileItem
+from lib_file_storage import AtomicFile, FileAlreadyExistsException, FileStorage, StorageFileItem
 
 
 ViewResponse = Dict[str, Any]
-MethodResponse = str
+MethodResponse = Union[str, Dict[str, Any]]
 
 LOGGER = logging.getLogger('app')
 
@@ -111,7 +111,7 @@ def root_page() -> ViewResponse:
 @bottle_get('/cgi/enumerate/')
 def cgi_enumerate() -> MethodResponse:
     LOGGER.info('Enumerate result_files')
-    bottle.response.content_type = 'application/json'
+
     result_files = []
     files = STORAGE.enumerate_files()
     for file in files:
@@ -134,14 +134,20 @@ def cgi_addtext() -> MethodResponse:
     forms: bottle.FormsDict = bottle.request.forms
     text_title = forms.title  # pylint: disable=no-member
     LOGGER.info('Share text begin: %s', text_title)
+
     original_filename = f'{text_title}.txt'
     body = bytearray(forms.body, encoding='utf-8')  # pylint: disable=no-member
 
-    with STORAGE.open_file_writer(original_filename) as writer:
-        writer.write(body)
+    try:
+        with STORAGE.open_file_writer(original_filename) as writer:
+            writer.write(body)
+    except FileAlreadyExistsException as exc:
+        LOGGER.error('Shared text: FileAlreadyExistsException: %s', exc)
+        bottle.response.status = 403
+        return {'status': 'failed', 'error_details': 'FileAlreadyExists'}
 
     LOGGER.info('Shared text size: %d', len(body))
-    return 'OK'
+    return {'status': 'ok'}
 
 
 class StorageFileTarget(BaseTarget):  # type: ignore
@@ -172,45 +178,52 @@ def cgi_upload() -> MethodResponse:
     # It blocks forever in read(size) call.
     use_async_implementation = config.WEB_SERVER != 'wsgiref'
 
-    if use_async_implementation:
-        size = 0
-        file = NullTarget() if config.DISABLE_STORAGE else StorageFileTarget()
-        parser = StreamingFormDataParser(headers=bottle.request.headers)
-        parser.register('file', file)
+    try:
+        if use_async_implementation:
+            size = 0
+            file = NullTarget() if config.DISABLE_STORAGE else StorageFileTarget()
+            parser = StreamingFormDataParser(headers=bottle.request.headers)
+            parser.register('file', file)
 
-        while True:
-            LOGGER.debug('Read async chunk...')
-            buffer = bottle.request.environ['wsgi.input']
-            chunk = buffer.read(64 * 1024)
-            if not chunk:
-                break
-            LOGGER.debug('Got async chunk from network: %d bytes', len(chunk))
-            parser.data_received(chunk)
-            size += len(chunk)
-
-        LOGGER.info('Uploaded request size: %s bytes', size)
-    else:
-        size = 0
-        files: bottle.FormsDict = bottle.request.files
-        upload = files.file  # pylint: disable=no-member
-        if upload is None:
-            raise Exception('ERROR! "file" multipart field was not found')
-        original_filename = upload.raw_filename
-        body = upload.file
-
-        with STORAGE.open_file_writer(original_filename) as writer:
             while True:
-                LOGGER.debug('Read synchronous chunk...')
-                chunk = body.read(64 * 1024)
+                LOGGER.debug('Read async chunk...')
+                buffer = bottle.request.environ['wsgi.input']
+                chunk = buffer.read(64 * 1024)
                 if not chunk:
                     break
-                LOGGER.debug('Got synchronous chunk from network: %d bytes', len(chunk))
-                if not config.DISABLE_STORAGE:
-                    writer.write(chunk)
+                LOGGER.debug('Got async chunk from network: %d bytes', len(chunk))
+                parser.data_received(chunk)
                 size += len(chunk)
 
-        LOGGER.info('Uploaded file size: %d bytes', size)
-    return 'OK'
+            LOGGER.info('Uploaded request size: %s bytes', size)
+        else:
+            size = 0
+            files: bottle.FormsDict = bottle.request.files
+            upload = files.file  # pylint: disable=no-member
+            if upload is None:
+                raise Exception('ERROR! "file" multipart field was not found')
+            original_filename = upload.raw_filename
+            body = upload.file
+
+            with STORAGE.open_file_writer(original_filename) as writer:
+                while True:
+                    LOGGER.debug('Read synchronous chunk...')
+                    chunk = body.read(64 * 1024)
+                    if not chunk:
+                        break
+                    LOGGER.debug('Got synchronous chunk from network: %d bytes', len(chunk))
+                    if not config.DISABLE_STORAGE:
+                        writer.write(chunk)
+                    size += len(chunk)
+
+            LOGGER.info('Uploaded file size: %d bytes', size)
+
+    except FileAlreadyExistsException as exc:
+        LOGGER.error('Uploaded file: FileAlreadyExistsException: %s', exc)
+        bottle.response.status = 403
+        return {'status': 'failed', 'error_details': 'FileAlreadyExists'}
+
+    return {'status': 'ok'}
 
 
 @bottle_post('/cgi/remove/')
@@ -219,7 +232,7 @@ def cgi_remove() -> MethodResponse:
     forms: bottle.FormsDict = bottle.request.forms
     urlpath = forms.fileName  # pylint: disable=no-member
     STORAGE.remove_file(urlpath)
-    return 'OK'
+    return {'status': 'ok'}
 
 
 # API endpoint for auto tests
@@ -227,7 +240,7 @@ def cgi_remove() -> MethodResponse:
 def cgi_remove_all() -> MethodResponse:
     LOGGER.info('Remove all files in storage')
     STORAGE.remove_all_files()
-    return 'OK'
+    return {'status': 'ok'}
 
 
 @bottle_route('/static/<urlpath:path>')
