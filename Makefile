@@ -33,6 +33,8 @@ check-all-docker: check-md check-yaml check-make check-pep8
 
 check-all-local: check-pep8-local check-mypy check-lint
 
+check-all: check-all-local check-all-docker
+
 # =================================
 
 check-md:
