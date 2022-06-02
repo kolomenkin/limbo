@@ -41,7 +41,6 @@ ij_yaml_block_mapping_on_new_line = true
 
 [*.sh]
 indent_style = space
-# Note: indent_size is not applied for Bash scripts in PyCharm for some reason. Pycharm is using indentation size 2.
 indent_size = 2
 end_of_line = lf
 
@@ -54,7 +53,9 @@ max_line_length = 140
 indent_style = space
 indent_size = 2
 max_line_length = 200
+# Empty list of tags:
 ij_html_do_not_indent_children_of_tags =
+ij_html_space_inside_empty_tag = true
 
 [*.css]
 indent_style = space

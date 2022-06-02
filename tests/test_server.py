@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import requests
 from dataclasses_json import dataclass_json, Undefined
+from dataclasses_json.mm import SchemaType
 from requests import Response
 
 from utils.testing_helpers import get_random_bytes, get_random_text, wait_net_service
@@ -109,7 +110,8 @@ class ServerTestCase(TestCase):
         log('Request: GET ' + url)
         response = requests.get(url)
         self.check_response(response)
-        files: List[FileOnServer] = FileOnServer.schema().load(response.json(), many=True)  # type: ignore  # pylint: disable=no-member  # noqa: E501
+        schema: SchemaType = FileOnServer.schema()  # type: ignore  # pylint: disable=no-member
+        files: List[FileOnServer] = schema.load(response.json(), many=True)
         # xtype: ignore  # xpylint: disable=no-member
         files = sorted(files, key=lambda item: item.display_filename)
         return files
