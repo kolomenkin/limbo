@@ -1,31 +1,31 @@
 body {
-	background-color: #EEEEEE;
+  background-color: #EEEEEE;
 }
 
 .dropzone {
-    border-radius: 6px;
-	background-color: #EEEEEE;
+  border-radius: 6px;
+  background-color: #EEEEEE;
 }
 
 .table-bordered {
-	background-color: #F5F5F5;
+  background-color: #F5F5F5;
 }
 
 .modal-content {
-	background-color: #EEEEEE;
+  background-color: #EEEEEE;
 }
 
 .dropzone .dz-message {
-    border-radius: 6px;
-	background-color: #DDDDDD;
-	border: 2px solid Gray;
-	color: DimGray;
-	padding: 35px 32px;
-	font-size: 18px;
-	margin: 1em 0;
+  border-radius: 6px;
+  background-color: #DDDDDD;
+  border: 2px solid Gray;
+  color: DimGray;
+  padding: 35px 32px;
+  font-size: 18px;
+  margin: 1em 0;
 }
 
 .btn-danger {
-    border-radius: 4px;
-	font-size: 14px;
+  border-radius: 4px;
+  font-size: 14px;
 }
