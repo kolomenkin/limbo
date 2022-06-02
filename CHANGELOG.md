@@ -4,11 +4,47 @@ CHANGELOG
 future release
 ------
 
-v1.4.2 [2020-02-15]
+v1.6 [2020-06-xx]
+------
+
+- fix backend: return code 403 in case uploaded file already exists in the storage
+- show error message box in case of error during file adding (file already exists & etc)
+- Front: improve code formatting
+
+v1.5 [2020-05-31]
+------
+
+- Dockerfile: update Python from `3.7.6-alpine` to `3.10.4-alpine3.16`
+- remove unused Travis CI support
+- update all Python package dependencies to latest versions
+- `cherrypy` was split into two projects. Now we are using `cheroot`
+- refactor code: use f-strings more
+- refactor code: use Path object from `pathlib` instead of `os.path` library
+
+v1.4.4 [2022-05-30]
+------
+
+- add GitHub Action CI integration
+- CI: automatically build Docker image and upload to Dockerhub registry
+- upgrade vulnerable dependencies: `twisted` and `waitress`
+- remove broken Python 3.6 support after upgrading `twisted` package
+- update all Python package dependencies to modern versions
+- fix flaky (unstable) tests
+- improve code formatting
+- update documentation
+
+v1.4.3 [2020-02-15]
 ------
 
 - upgrade python packages found vulnerable
 - CI fixes and improvements
+- drop Python 3.4 support (3.5, 3.6, 3.7 are supported)
+
+v1.4.2 [2018-06-18]
+------
+
+- improve CI stability
+- CI: add support testing externally started Limbo web server
 
 v1.4.1 [2018-06-15]
 ------
@@ -16,7 +52,7 @@ v1.4.1 [2018-06-15]
 - fix bug with wrong directory credentials (partly existed from 1.0, became blocking in 1.4)
 - refactor lib_file_storage.py to catch and ignore exceptions in retention thread
 - force redownload of updated recently main.css
-- add travis script for automated build
+- add Travis CI script for automated build
 
 v1.4 [2018-06-13]
 ------
