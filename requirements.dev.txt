@@ -3,7 +3,7 @@
 dataclasses-json==0.5.7
 flake8==4.0.1
 mypy==0.960
-numpy==1.21.6
+numpy==1.22.0
 pylint==2.13.9
 pytest==7.1.2
 requests==2.27.1
