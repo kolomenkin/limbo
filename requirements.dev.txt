@@ -6,7 +6,7 @@ mypy==0.960
 numpy==1.21.6
 pylint==2.13.9
 pytest==7.1.2
-requests==2.27.1
+requests==2.31.0
 types-requests==2.27.29
 
 # web servers
